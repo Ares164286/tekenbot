@@ -2,7 +2,6 @@ import os
 import discord
 from discord.ext import commands
 from server import keep_alive
-from dotenv import load_dotenv  # dotenvをインポート
 import commands as cmd  # commands.pyからインポート
 import diceroll.roll_parser as roll_parser  # roll_parserをインポート
 
