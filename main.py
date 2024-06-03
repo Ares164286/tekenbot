@@ -6,9 +6,6 @@ from dotenv import load_dotenv  # dotenvをインポート
 import commands as cmd  # commands.pyからインポート
 import diceroll.roll_parser as roll_parser  # roll_parserをインポート
 
-# .envファイルから環境変数を読み込む
-load_dotenv()
-
 # 環境変数からDiscordボットのトークンを取得
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 
