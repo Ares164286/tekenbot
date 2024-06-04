@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class Yubaba(commands.Cog):
+class yubaba(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -19,4 +19,4 @@ class Yubaba(commands.Cog):
             await interaction.response.send_message(f"表示名の変更中に予期しないエラーが発生しました: {e}")
 
 async def setup(bot):
-    await bot.add_cog(Yubaba(bot))
+    await bot.add_cog(yubaba(bot))
