@@ -5,6 +5,7 @@ import func.jobs as jobs
 import func.stats_6e as stats_6e
 import func.stats_7e as stats_7e
 import func.help as help_cmd
+import func.flash_word as flash_word  # flash_wordをインポート
 
 commands_dict = {
     "時間割": call.send_timetable,
@@ -28,5 +29,6 @@ commands_dict = {
     "能力値7": stats_7e.send_stats_7e,
     "へるぷ": help_cmd.send_help,
     "ヘルプ": help_cmd.send_help,
+    "フラッシュワード": flash_word.flash_word  # フラッシュワードコマンドを追加
 }
 
