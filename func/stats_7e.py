@@ -1,6 +1,9 @@
 import discord
 import random
 
+def roll_dice(sides, rolls):
+    return [random.randint(1, sides) for _ in range(rolls)]
+
 async def send_stats_7e(ctx, *args):
     num = 1  # デフォルトの生成回数
     if args:
@@ -13,14 +16,14 @@ async def send_stats_7e(ctx, *args):
     results = []
     for _ in range(num):
         stats = {
-            "STR": random.randint(15, 90) // 5 * 5,
-            "CON": random.randint(15, 90) // 5 * 5,
-            "POW": random.randint(15, 90) // 5 * 5,
-            "DEX": random.randint(15, 90) // 5 * 5,
-            "APP": random.randint(15, 90) // 5 * 5,
-            "SIZ": (random.randint(40, 90) // 5 * 5) + 30,
-            "INT": (random.randint(40, 90) // 5 * 5) + 30,
-            "EDU": (random.randint(50, 99) // 5 * 5) + 30
+            "STR": sum(roll_dice(6, 3)) * 5,
+            "CON": sum(roll_dice(6, 3)) * 5,
+            "POW": sum(roll_dice(6, 3)) * 5,
+            "DEX": sum(roll_dice(6, 3)) * 5,
+            "APP": sum(roll_dice(6, 3)) * 5,
+            "SIZ": (sum(roll_dice(6, 2)) + 6) * 5,
+            "INT": (sum(roll_dice(6, 2)) + 6) * 5,
+            "EDU": (sum(roll_dice(6, 3)) + 3) * 5
         }
         hp = (stats["CON"] + stats["SIZ"]) // 10
         mp = stats["POW"] // 5
@@ -30,13 +33,13 @@ async def send_stats_7e(ctx, *args):
         kno = stats["EDU"]
         db = (stats["STR"] + stats["SIZ"]) // 10
 
-        if db <= 8:
+        if db <= 64:
             db = "-1d6"
-        elif db <= 12:
+        elif db <= 84:
             db = "-1d4"
-        elif db <= 16:
+        elif db <= 124:
             db = "0"
-        elif db <= 24:
+        elif db <= 164:
             db = "+1d4"
         else:
             db = "+1d6"
