@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-class ActivityReport(commands.Cog):
+class activityreport(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -20,4 +20,4 @@ class ActivityReport(commands.Cog):
         await interaction.response.send_message(report)
 
 async def setup(bot):
-    await bot.add_cog(ActivityReport(bot))
+    await bot.add_cog(activityreport(bot))
