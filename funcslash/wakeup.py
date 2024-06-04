@@ -17,4 +17,4 @@ class wakeup(commands.Cog):
             await asyncio.sleep(random.uniform(0.5, 2))
 
 async def setup(bot):
-    await bot.add_cog(WakeUp(bot))
+    await bot.add_cog(wakeup(bot))
