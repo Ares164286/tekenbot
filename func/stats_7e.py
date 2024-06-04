@@ -1,7 +1,16 @@
 import discord
 import random
 
-async def send_stats_7e(ctx, num: int = 1):
+async def send_stats_7e(ctx, *args):
+    num = 1  # デフォルトの生成回数
+    if args:
+        try:
+            num = int(args[0])
+        except ValueError:
+            await ctx.send("回数は整数で指定してください。")
+            return
+
+    results = []
     for _ in range(num):
         stats = {
             "STR": random.randint(15, 90) // 5 * 5,
@@ -38,4 +47,5 @@ async def send_stats_7e(ctx, num: int = 1):
             f"INT:{stats['INT']} EDU:{stats['EDU']}\n"
             f"[HP:{hp} MP:{mp} SAN:{san} IDE:{ide} LUK:{luk} KNO:{kno} DB:{db}]"
         )
-        await ctx.send(result)
+        results.append(result)
+    await ctx.send("\n\n".join(results))
