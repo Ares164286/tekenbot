@@ -4,9 +4,6 @@ import func.hantei as hantei
 import func.jobs as jobs
 import func.stats_6e as stats_6e
 import func.stats_7e as stats_7e
-import funcslash.activity_report as activity_report
-import funcslash.wakeup as wakeup
-import funcslash.yubaba as yubaba
 
 commands_dict = {
     "時間割": call.send_timetable,
@@ -25,12 +22,9 @@ commands_dict = {
     "職業ランダム": jobs.send_random_base_skill,
     "職業2010ランダム": jobs.send_random_2010_skill,
     "フュージョン": fusion.try_fusion_command,
-    "起きろ": wakeup.wakeup,
     "判定": hantei.hantei,
     "能力値": stats_6e.send_stats,
     "能力値7": stats_7e.send_stats_7e,
-    "活動報告": activity_report.report,
-    "湯婆婆": yubaba.yubaba,
     "help": send_help,
     "へるぷ": send_help,
     "ヘルプ": send_help,
@@ -54,6 +48,9 @@ command_descriptions = {
     "能力値7": "クトゥルフ7版の能力値を生成します。",
     "活動報告": "活動報告のフォーマットを表示します。",
     "湯婆婆": "指定したユーザーの名前を変更します。",
+    "起きろ": "指定したユーザーに10回メンションを送信します。",
+    "活動報告": "活動報告を作成します。",
+    
 }
 
 async def send_help(ctx):
