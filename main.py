@@ -77,9 +77,9 @@ async def handle_dm_message(message):
         await client.process_commands(message)
 
 # コマンドの実行を関数として定義
-async def execute_command(ctx, function, args=None):
+async def execute_command(ctx, function, *args):
     if args:
-        await function(ctx, args=args)
+        await function(ctx, *args)
     else:
         await function(ctx)
 
