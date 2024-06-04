@@ -49,7 +49,7 @@ async def on_message(message):
 
     # ボットがメンションされた場合の処理
     if client.user.mentioned_in(message):
-        await message.channel.send("コマンド一覧→ /help, /ヘルプ, /へるぷ")
+        await message.channel.send("コマンド一覧→ /ヘルプ, /へるぷ")
         return
 
     # DMメッセージの場合
