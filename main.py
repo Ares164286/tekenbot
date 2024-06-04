@@ -47,6 +47,11 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    # ボットがメンションされた場合の処理
+    if client.user.mentioned_in(message):
+        await message.channel.send("コマンド一覧→ /help, /ヘルプ, /へるぷ")
+        return
+
     # DMメッセージの場合
     if isinstance(message.channel, discord.DMChannel):
         await handle_dm_message(message)
