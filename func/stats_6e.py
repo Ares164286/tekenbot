@@ -1,17 +1,18 @@
 import discord
 import random
 
-async def send_stats(ctx, *args):
-    stats = {
-        "STR": random.randint(3, 18),
-        "CON": random.randint(3, 18),
-        "POW": random.randint(3, 18),
-        "DEX": random.randint(3, 18),
-        "APP": random.randint(3, 18),
-        "SIZ": random.randint(8, 18),
-        "INT": random.randint(8, 18),
-        "EDU": random.randint(6, 21)
-    }
+async def send_stats(ctx, num: int = 1):
+    for _ in range(num):
+        stats = {
+            "STR": random.randint(3, 18),
+            "CON": random.randint(3, 18),
+            "POW": random.randint(3, 18),
+            "DEX": random.randint(3, 18),
+            "APP": random.randint(3, 18),
+            "SIZ": random.randint(8, 18),
+            "INT": random.randint(8, 18),
+            "EDU": random.randint(6, 21)
+        }
     hp = (stats["CON"] + stats["SIZ"]) // 2
     mp = stats["POW"]
     san = stats["POW"] * 5
