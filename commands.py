@@ -5,7 +5,7 @@ import func.jobs as jobs
 import func.stats_6e as stats_6e
 import func.stats_7e as stats_7e
 import funcslash.activity_report as activity_report
-import funcslash.wakeup as Wakeup
+import funcslash.wakeup as wakeup
 import funcslash.yubaba as yubaba
 
 commands_dict = {
@@ -25,7 +25,7 @@ commands_dict = {
     "職業ランダム": jobs.send_random_base_skill,
     "職業2010ランダム": jobs.send_random_2010_skill,
     "フュージョン": fusion.try_fusion_command,
-    "起きろ": wakeup.Wakeup,
+    "起きろ": wakeup.wakeup,
     "判定": hantei.hantei,
     "能力値": stats_6e.send_stats,
     "能力値7": stats_7e.send_stats_7e,
