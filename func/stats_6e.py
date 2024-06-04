@@ -1,6 +1,9 @@
 import discord
 import random
 
+def roll_dice(sides, rolls):
+    return [random.randint(1, sides) for _ in range(rolls)]
+
 async def send_stats(ctx, *args):
     num = 1  # デフォルトの生成回数
     if args:
@@ -13,14 +16,14 @@ async def send_stats(ctx, *args):
     results = []
     for _ in range(num):
         stats = {
-            "STR": random.randint(3, 18),
-            "CON": random.randint(3, 18),
-            "POW": random.randint(3, 18),
-            "DEX": random.randint(3, 18),
-            "APP": random.randint(3, 18),
-            "SIZ": random.randint(8, 18),
-            "INT": random.randint(8, 18),
-            "EDU": random.randint(6, 21)
+            "STR": sum(roll_dice(6, 3)),
+            "CON": sum(roll_dice(6, 3)),
+            "POW": sum(roll_dice(6, 3)),
+            "DEX": sum(roll_dice(6, 3)),
+            "APP": sum(roll_dice(6, 3)),
+            "SIZ": sum(roll_dice(6, 2)) + 6,
+            "INT": sum(roll_dice(6, 2)) + 6,
+            "EDU": sum(roll_dice(6, 3))
         }
         hp = (stats["CON"] + stats["SIZ"]) // 2
         mp = stats["POW"]
