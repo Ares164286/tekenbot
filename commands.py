@@ -27,7 +27,6 @@ commands_dict = {
     "判定": hantei.hantei,
     "能力値": stats_6e.send_stats,
     "能力値7": stats_7e.send_stats_7e,
-    "help": help_cmd.send_help,
     "へるぷ": help_cmd.send_help,
     "ヘルプ": help_cmd.send_help,
     "フラッシュワード": flash_word.flash_word  # フラッシュワードコマンドを追加
