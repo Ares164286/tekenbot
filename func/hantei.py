@@ -1,7 +1,6 @@
-import discord
 import random
 
-async def hantei(ctx, *, message: str):
-    responses = ["◎", "◯", "△", "✕"]
-    response = random.choice(responses)
-    await ctx.send(response)
+async def hantei(ctx, *args):
+    results = ["◎", "◯", "△", "✕"]
+    result = random.choice(results)
+    await ctx.send(result)
