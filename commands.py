@@ -30,7 +30,7 @@ commands_dict = {
     "能力値7": stats_7e.send_stats_7e,
     "へるぷ": help_cmd.send_help,
     "ヘルプ": help_cmd.send_help,
-    "フラッシュワード": flash_word.flash_word  # フラッシュワードコマンドを追加
-    "hb": hitandblow.start_game  # ヒットアンドブローコマンドを追加
+    "フラッシュワード": flash_word.flash_word,  # フラッシュワードコマンドを追加
+    "hb": hitandblow.start_game,  # ヒットアンドブローコマンドを追加
 }
 
