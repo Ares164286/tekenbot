@@ -5,8 +5,8 @@ import func.jobs as jobs
 import func.stats_6e as stats_6e
 import func.stats_7e as stats_7e
 import func.help as help_cmd
-import func.flash_word as flash_word  # flash_wordをインポート
-import func.hitandblow as hitandblow  # hitandblowをインポート
+import func.flash_word as flash_word
+import func.hitandblow as hitandblow
 
 commands_dict = {
     "時間割": call.send_timetable,
@@ -24,13 +24,12 @@ commands_dict = {
     "職業2010": jobs.send_2010_skills,
     "職業ランダム": jobs.send_random_base_skill,
     "職業2010ランダム": jobs.send_random_2010_skill,
-    "フュージョン": fusion.try_fusion_command,
+    "フュージョン": fusion.fusion,  # フュージョンコマンドを更新
     "判定": hantei.hantei,
     "能力値": stats_6e.send_stats,
     "能力値7": stats_7e.send_stats_7e,
     "へるぷ": help_cmd.send_help,
     "ヘルプ": help_cmd.send_help,
-    "フラッシュワード": flash_word.flash_word,  # フラッシュワードコマンドを追加
-    "hb": hitandblow.start_game,  # ヒットアンドブローコマンドを追加
+    "フラッシュワード": flash_word.flash_word,
+    "hb": hitandblow.start_game
 }
-
