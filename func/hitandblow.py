@@ -20,8 +20,22 @@ class HitAndBlowGame:
 
 games = {}
 
+TARGET_CHANNEL_ID = 1247535324440170546  # 指定したチャンネルIDに置き換えてください
+
 async def start_game(ctx, *args):
+    if ctx.channel.id != TARGET_CHANNEL_ID:
+        await ctx.send("このコマンドは指定されたチャンネルでのみ使用できます。")
+        return
+
     user_id = ctx.author.id
+
+    if args and args[0].lower() == 'reset':
+        if user_id in games:
+            del games[user_id]
+            await ctx.send(f"{ctx.author.name} さんのゲームをリセットしました。")
+        else:
+            await ctx.send(f"{ctx.author.name} さんは現在ゲームを行っていません。")
+        return
 
     if user_id not in games:
         games[user_id] = HitAndBlowGame()
