@@ -18,7 +18,7 @@ intents.dm_messages = True  # DMメッセージを取得するためのIntentを
 client = commands.Bot(command_prefix='/', intents=intents)
 
 # 特定のチャンネルIDを指定（リスト形式）
-TARGET_CHANNEL_IDS = [1245562745269780531, 1117864819442335824, 1117859740970651798, 1247166684121268266]  # ここに指定するチャンネルIDを入力
+TARGET_CHANNEL_IDS = [1245562745269780531, 1117864819442335824, 1117859740970651798, 1247166684121268266, 1247535324440170546]  # ここに指定するチャンネルIDを入力
 
 @client.event
 async def on_ready():
