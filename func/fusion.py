@@ -2,9 +2,10 @@ import discord
 import random
 import asyncio
 
-async def fusion(ctx, name1: str = None, name2: str = None):
-    if name1 and name2:
+async def fusion(ctx, *args):
+    if len(args) == 2:
         # 引数で名前が指定された場合
+        name1, name2 = args
         new_name = create_fusion_name(name1, name2)
         await change_nickname(ctx, new_name)
         await ctx.send(f"{name1}&{name2}\n「「フュー...ジョン」」\n「「はっ！！！」」\n{ctx.author.name}が「{new_name}」になりました")
