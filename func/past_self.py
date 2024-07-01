@@ -36,6 +36,6 @@ class PastSelf(commands.Cog):
         await webhook.delete()
 
 async def setup(bot):
-    target_channel_id = 123456789012345678  # 監視するチャンネルのIDを設定
+    target_channel_id = 1247421345705492530  # 監視するチャンネルのIDを設定
     history_limit = 1000  # 読み取るメッセージの数を設定
     await bot.add_cog(PastSelf(bot, target_channel_id, history_limit))
