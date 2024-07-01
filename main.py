@@ -47,6 +47,10 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    # @here や @everyone のメンションには反応しない
+    if any(mention in message.content for mention in ["@here", "@everyone"]):
+        return
+
     # ボットがメンションされた場合の処理
     if client.user.mentioned_in(message):
         await message.channel.send("コマンド一覧→ /ヘルプ, /へるぷ")
