@@ -3,17 +3,21 @@ import random
 from discord.ext import commands
 
 class PastSelf(commands.Cog):
-    def __init__(self, bot, target_channel_id, history_channel_id, history_limit):
+    def __init__(self, bot, target_channel_id, history_forum_id, exclude_thread_ids=None, history_limit=1000):
         self.bot = bot
         self.target_channel_id = target_channel_id
-        self.history_channel_id = history_channel_id
+        self.history_forum_id = history_forum_id
+        self.exclude_thread_ids = exclude_thread_ids or []
         self.history_limit = history_limit  # 履歴の読み取り範囲を設定
 
-    async def fetch_messages(self, channel, user_id):
+    async def fetch_messages(self, forum_channel, user_id):
         messages = []
-        async for message in channel.history(limit=self.history_limit):
-            if message.author.id == user_id:
-                messages.append(message)
+        async for thread in forum_channel.threads:
+            if thread.id in self.exclude_thread_ids:
+                continue
+            async for message in thread.history(limit=self.history_limit):
+                if message.author.id == user_id:
+                    messages.append(message)
         return messages
 
     @commands.Cog.listener()
@@ -21,16 +25,20 @@ class PastSelf(commands.Cog):
         if message.channel.id != self.target_channel_id or message.author.bot:
             return
 
-        # Fetch messages from the history channel
-        history_channel = self.bot.get_channel(self.history_channel_id)
-        if not history_channel:
-            await message.channel.send("指定された履歴チャンネルが見つかりません。")
+        # Fetch messages from the history forum
+        history_forum = self.bot.get_channel(self.history_forum_id)
+        if not history_forum:
+            await message.channel.send("指定された履歴フォーラムが見つかりません。")
             return
 
-        messages = await self.fetch_messages(history_channel, message.author.id)
+        if not isinstance(history_forum, discord.ForumChannel):
+            await message.channel.send("指定された履歴チャンネルはフォーラムではありません。")
+            return
+
+        messages = await self.fetch_messages(history_forum, message.author.id)
         
         if not messages:
-            await message.channel.send("指定されたチャンネルに該当するユーザーのメッセージが見つかりませんでした。")
+            await message.channel.send("指定されたフォーラムに該当するユーザーのメッセージが見つかりませんでした。")
             return
         
         # Pick a random message
@@ -43,6 +51,7 @@ class PastSelf(commands.Cog):
 
 async def setup(bot):
     target_channel_id = 1247421345705492530  # 監視するチャンネルのIDを設定
-    history_channel_id = 1024642680577331200  # 過去のメッセージを読み取るチャンネルのIDを設定
+    history_forum_id = 1024642680577331200  # 過去のメッセージを読み取るフォーラムチャンネルのIDを設定
+    exclude_thread_ids = [123456789012345678, 987654321098765432]  # 除外するスレッドのIDを設定
     history_limit = 1000  # 読み取るメッセージの数を設定
-    await bot.add_cog(PastSelf(bot, target_channel_id, history_channel_id, history_limit))
+    await bot.add_cog(PastSelf(bot, target_channel_id, history_forum_id, exclude_thread_ids, history_limit))
