@@ -35,6 +35,8 @@ async def on_ready():
     await client.load_extension('funcslash.activity_report')
     await client.load_extension('funcslash.yubaba')
     await client.load_extension('funcslash.wakeup')
+    await client.load_extension('func.past_self')
+
     try:
         synced = await client.tree.sync()
         print(f"Synced {len(synced)} command(s): {[cmd.name for cmd in synced]}")
