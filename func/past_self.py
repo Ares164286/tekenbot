@@ -12,7 +12,11 @@ class PastSelf(commands.Cog):
 
     async def fetch_messages(self, forum_channel, user_id):
         messages = []
-        threads = await forum_channel.archived_threads(limit=None).flatten() + forum_channel.threads
+        # 非同期ジェネレーターをリストに変換
+        archived_threads = [thread async for thread in forum_channel.archived_threads(limit=None)]
+        active_threads = forum_channel.threads
+        threads = archived_threads + active_threads
+
         for thread in threads:
             if thread.id in self.exclude_thread_ids:
                 continue
@@ -53,6 +57,6 @@ class PastSelf(commands.Cog):
 async def setup(bot):
     target_channel_id = 1247421345705492530  # 監視するチャンネルのIDを設定
     history_forum_id = 1024642680577331200  # 過去のメッセージを読み取るフォーラムチャンネルのIDを設定
-    exclude_thread_ids = []  # 除外するスレッドのIDを設定
+    exclude_thread_ids = [123456789012345678, 987654321098765432]  # 除外するスレッドのIDを設定
     history_limit = 1000  # 読み取るメッセージの数を設定
     await bot.add_cog(PastSelf(bot, target_channel_id, history_forum_id, exclude_thread_ids, history_limit))
