@@ -30,11 +30,12 @@ async def on_ready():
 
     await client.change_presence(status=discord.Status.online, activity=discord.CustomActivity(name='あれすくんを監視中'))
 
-    # Load the activity report, yubaba, wakeup cogs and past_self from funcslash and func
+    # Load the cogs from func and funcslash
     await client.load_extension('funcslash.activity_report')
     await client.load_extension('funcslash.yubaba')
     await client.load_extension('funcslash.wakeup')
     await client.load_extension('func.past_self')
+    await client.load_extension('func.save_messages')
 
     try:
         synced = await client.tree.sync()
