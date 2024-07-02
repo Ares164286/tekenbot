@@ -104,9 +104,6 @@ for command, function in cmd.commands_dict.items():
     wrapper.__name__ = command  # これでコマンド名を設定
     client.command(name=command)(wrapper)
 
-# Webサーバーを起動して、ボットを常に動かす
-keep_alive()
-
 # Botの起動とエラーハンドリング
 try:
     client.run(TOKEN)
