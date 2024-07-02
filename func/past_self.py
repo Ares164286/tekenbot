@@ -23,6 +23,11 @@ class PastSelf(commands.Cog):
     async def fetch_and_save_messages(self, forum_id):
         try:
             forum_channel = self.bot.get_channel(forum_id)
+            print(f"フォーラムチャンネル: {forum_channel}")  # デバッグ用の出力
+            if forum_channel is None:
+                print("フォーラムチャンネルが見つかりません")
+                return
+
             messages = []
 
             # スレッドを取得し、それぞれのスレッドからメッセージを取得
@@ -82,6 +87,10 @@ class PastSelf(commands.Cog):
             return
         history_forum_id = 1024642680577331200
         history_forum = self.bot.get_channel(history_forum_id)
+        if history_forum is None:
+            print("履歴フォーラムが見つかりません")
+            return
+
         if message.channel.id in [1245562745269780531, 1117864819442335824, 1117859740970651798, 1247166684121268266]:
             messages = await self.fetch_messages(history_forum, message.author.id)
             if messages:
