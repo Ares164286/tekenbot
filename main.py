@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands
 import commands as cmd  # commands.pyからインポート
 import diceroll.roll_parser as roll_parser  # roll_parserをインポート
-from func.past_self import fetch_and_save_messages
 
 # 環境変数からDiscordボットのトークンを取得
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
@@ -31,7 +30,7 @@ async def on_ready():
 
     await client.change_presence(status=discord.Status.online, activity=discord.CustomActivity(name='あれすくんを監視中'))
 
-    # Load the activity report, yubaba, and wakeup cogs from funcslash
+    # Load the activity report, yubaba, wakeup cogs and past_self from funcslash and func
     await client.load_extension('funcslash.activity_report')
     await client.load_extension('funcslash.yubaba')
     await client.load_extension('funcslash.wakeup')
@@ -110,10 +109,3 @@ try:
 except Exception as e:
     print(f'Error: {e}')
     os.system("kill 1")
-
-# 手動でメッセージを保存するためのコマンドを登録
-@client.command(name='save_history')
-async def save_history(ctx):
-    history_forum_id = 1024642680577331200
-    await fetch_and_save_messages(client, history_forum_id)
-    await ctx.send("メッセージの保存が完了しました")
