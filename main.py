@@ -104,12 +104,13 @@ for command, function in cmd.commands_dict.items():
     wrapper.__name__ = command  # これでコマンド名を設定
     client.command(name=command)(wrapper)
 
-@client.command()
-@commands.has_permissions(administrator=True)  # このコマンドは管理者のみ実行可能
+# 履歴を保存するコマンド
+@client.command(name='save_history')
 async def save_history(ctx):
-    history_channel_id = 1024642680577331200  # 履歴を保存するチャンネルのID
-    await save_messages_to_db(history_channel_id)
-    await ctx.send("メッセージ履歴が保存されました。")
+    from func.past_self import fetch_and_save_messages
+    history_channel_id = 1024642680577331200
+    await fetch_and_save_messages(client, history_channel_id)
+    await ctx.send("履歴を保存しました。")
 
 # Botの起動とエラーハンドリング
 try:
