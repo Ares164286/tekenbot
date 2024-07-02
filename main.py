@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import commands as cmd  # commands.pyからインポート
 import diceroll.roll_parser as roll_parser  # roll_parserをインポート
+from func.past_self import save_messages_to_db  # 手動保存関数をインポート
 
 # 環境変数からDiscordボットのトークンを取得
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
@@ -102,6 +103,13 @@ for command, function in cmd.commands_dict.items():
             await execute_command(ctx, function)
     wrapper.__name__ = command  # これでコマンド名を設定
     client.command(name=command)(wrapper)
+
+@client.command()
+@commands.has_permissions(administrator=True)  # このコマンドは管理者のみ実行可能
+async def save_history(ctx):
+    history_channel_id = 1024642680577331200  # 履歴を保存するチャンネルのID
+    await save_messages_to_db(history_channel_id)
+    await ctx.send("メッセージ履歴が保存されました。")
 
 # Botの起動とエラーハンドリング
 try:
