@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import commands as cmd  # commands.pyからインポート
 import diceroll.roll_parser as roll_parser  # roll_parserをインポート
+from func.past_self import fetch_and_save_messages
 
 # 環境変数からDiscordボットのトークンを取得
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
@@ -103,17 +104,16 @@ for command, function in cmd.commands_dict.items():
     wrapper.__name__ = command  # これでコマンド名を設定
     client.command(name=command)(wrapper)
 
-# 履歴を保存するコマンド
-@client.command(name='save_history')
-async def save_history(ctx):
-    from func.past_self import fetch_and_save_messages
-    history_channel_id = 1024642680577331200
-    await fetch_and_save_messages(client, history_channel_id)
-    await ctx.send("履歴を保存しました。")
-
 # Botの起動とエラーハンドリング
 try:
     client.run(TOKEN)
 except Exception as e:
     print(f'Error: {e}')
     os.system("kill 1")
+
+# 手動でメッセージを保存するためのコマンドを登録
+@client.command(name='save_history')
+async def save_history(ctx):
+    history_forum_id = 1024642680577331200
+    await fetch_and_save_messages(client, history_forum_id)
+    await ctx.send("メッセージの保存が完了しました")
