@@ -17,15 +17,21 @@ class PastSelf(commands.Cog):
 
     @tasks.loop(hours=12)
     async def fetch_messages_task(self):
-        history_channel_id = 1024642680577331200  # 履歴を保存するチャンネルのID
-        await self.fetch_and_save_messages(history_channel_id)
+        history_forum_id = 1024642680577331200  # 履歴を保存するフォーラムのID
+        await self.fetch_and_save_messages(history_forum_id)
 
-    async def fetch_and_save_messages(self, channel_id):
+    async def fetch_and_save_messages(self, forum_id):
         try:
-            channel = self.bot.get_channel(channel_id)
+            forum_channel = self.bot.get_channel(forum_id)
             messages = []
-            async for message in channel.history(limit=10000):
-                messages.append(message)
+
+            # スレッドを取得し、それぞれのスレッドからメッセージを取得
+            async for thread in forum_channel.archived_threads(limit=None):
+                async for message in thread.history(limit=10000):
+                    messages.append(message)
+            async for thread in forum_channel.threads:
+                async for message in thread.history(limit=10000):
+                    messages.append(message)
 
             if messages:
                 self.save_messages_to_db(messages)
@@ -57,8 +63,11 @@ class PastSelf(commands.Cog):
     async def fetch_messages(self, forum_channel, author_id):
         try:
             messages = []
-            threads = [thread async for thread in forum_channel.archived_threads(limit=None)] + forum_channel.threads
-            for thread in threads:
+            async for thread in forum_channel.archived_threads(limit=None):
+                async for message in thread.history(limit=10000):
+                    if message.author.id == author_id:
+                        messages.append(message)
+            async for thread in forum_channel.threads:
                 async for message in thread.history(limit=10000):
                     if message.author.id == author_id:
                         messages.append(message)
