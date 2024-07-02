@@ -149,7 +149,7 @@ class PastSelf(commands.Cog):
                 await webhook.send(random_message.content, username=random_message.author.display_name, avatar_url=random_message.author.avatar_url)
                 await webhook.delete()
 
-    @commands.command(name='save_history')
+    @commands.command(name='save_history_cmd')
     async def save_history(self, ctx):
         history_forum_id = 1024642680577331200
         await self.fetch_and_save_messages(history_forum_id)
