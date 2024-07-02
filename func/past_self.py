@@ -3,6 +3,7 @@ from discord.ext import tasks, commands
 import psycopg2
 import os
 import random
+import asyncio
 
 DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
@@ -32,16 +33,28 @@ class PastSelf(commands.Cog):
 
             # スレッドを取得し、それぞれのスレッドからメッセージを取得
             async for thread in forum_channel.archived_threads(limit=None):
-                async for message in thread.history(limit=10000):
-                    messages.append(message)
+                await self.fetch_thread_messages(thread, messages)
             async for thread in forum_channel.threads:
-                async for message in thread.history(limit=10000):
-                    messages.append(message)
+                await self.fetch_thread_messages(thread, messages)
 
             if messages:
                 self.save_messages_to_db(messages)
         except Exception as e:
             print(f"メッセージ取得中にエラーが発生しました: {e}")
+
+    async def fetch_thread_messages(self, thread, messages):
+        try:
+            async for message in thread.history(limit=10000):
+                messages.append(message)
+                await asyncio.sleep(0.1)  # リクエスト間隔を空ける
+        except discord.errors.HTTPException as e:
+            if e.status == 429:  # レート制限
+                retry_after = int(e.response.headers['Retry-After'])
+                print(f"レート制限に達しました。{retry_after}秒後に再試行します。")
+                await asyncio.sleep(retry_after)
+                await self.fetch_thread_messages(thread, messages)
+            else:
+                raise
 
     def save_messages_to_db(self, messages):
         try:
@@ -69,17 +82,28 @@ class PastSelf(commands.Cog):
         try:
             messages = []
             async for thread in forum_channel.archived_threads(limit=None):
-                async for message in thread.history(limit=10000):
-                    if message.author.id == author_id:
-                        messages.append(message)
+                await self.fetch_author_messages(thread, author_id, messages)
             async for thread in forum_channel.threads:
-                async for message in thread.history(limit=10000):
-                    if message.author.id == author_id:
-                        messages.append(message)
+                await self.fetch_author_messages(thread, author_id, messages)
             return messages
         except Exception as e:
             print(f"データベースからのメッセージ取得中にエラーが発生しました: {e}")
             return []
+
+    async def fetch_author_messages(self, thread, author_id, messages):
+        try:
+            async for message in thread.history(limit=10000):
+                if message.author.id == author_id:
+                    messages.append(message)
+                await asyncio.sleep(0.1)  # リクエスト間隔を空ける
+        except discord.errors.HTTPException as e:
+            if e.status == 429:  # レート制限
+                retry_after = int(e.response.headers['Retry-After'])
+                print(f"レート制限に達しました。{retry_after}秒後に再試行します。")
+                await asyncio.sleep(retry_after)
+                await self.fetch_author_messages(thread, author_id, messages)
+            else:
+                raise
 
     @commands.Cog.listener()
     async def on_message(self, message):
