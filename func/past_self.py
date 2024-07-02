@@ -22,8 +22,12 @@ class PastSelf(commands.Cog):
 
     async def fetch_and_save_messages(self, channel_id):
         channel = self.bot.get_channel(channel_id)
+        threads = []
         if isinstance(channel, discord.ForumChannel):
-            threads = [thread async for thread in channel.threads] + [thread async for thread in channel.archived_threads(limit=None)]
+            async for thread in channel.threads:
+                threads.append(thread)
+            async for thread in channel.archived_threads(limit=None):
+                threads.append(thread)
         else:
             threads = [channel]
 
