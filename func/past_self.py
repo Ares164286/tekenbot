@@ -1,11 +1,8 @@
 import discord
-import os
-import psycopg2
-import random
 from discord.ext import tasks, commands
-from discord.ext.commands import Bot
+import psycopg2
+import os
 
-# 環境変数からデータベース情報を取得
 DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
@@ -19,28 +16,20 @@ class PastSelf(commands.Cog):
 
     @tasks.loop(hours=12)
     async def fetch_messages_task(self):
-        # ここで対象チャンネルを指定
-        history_channel_id = 1024642680577331200
+        history_channel_id = 1024642680577331200  # 履歴を保存するチャンネルのID
         await self.fetch_and_save_messages(history_channel_id)
 
-    async def fetch_and_save_messages(self, forum_channel_id):
-        forum_channel = self.bot.get_channel(forum_channel_id)
-        if not forum_channel:
-            print(f"フォーラムチャンネルが見つかりません: {forum_channel_id}")
-            return
-
-        messages = []
-        threads = forum_channel.threads
-        for thread in threads:
-            async for message in thread.history(limit=10000):
+    async def fetch_and_save_messages(self, channel_id):
+        try:
+            channel = self.bot.get_channel(channel_id)
+            messages = []
+            async for message in channel.history(limit=10000):
                 messages.append(message)
 
-        async for archived_thread in forum_channel.archived_threads(limit=None):
-            async for message in archived_thread.history(limit=10000):
-                messages.append(message)
-
-        # データベースにメッセージを保存
-        self.save_messages_to_db(messages)
+            if messages:
+                self.save_messages_to_db(messages)
+        except Exception as e:
+            print(f"メッセージ取得中にエラーが発生しました: {e}")
 
     def save_messages_to_db(self, messages):
         try:
@@ -52,80 +41,49 @@ class PastSelf(commands.Cog):
                 port=DB_PORT
             )
             cursor = connection.cursor()
-
             for message in messages:
                 cursor.execute("""
                     INSERT INTO messages (message_id, author_id, content, created_at)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (message_id) DO NOTHING;
                 """, (message.id, message.author.id, message.content, message.created_at))
-
             connection.commit()
             cursor.close()
             connection.close()
         except Exception as e:
-            print(f"データベースへの保存中にエラーが発生しました: {e}")
+            print(f"データベースへのメッセージ保存中にエラーが発生しました: {e}")
+
+    async def fetch_messages(self, forum_channel, author_id):
+        try:
+            messages = []
+            threads = [thread async for thread in forum_channel.archived_threads(limit=None)] + forum_channel.threads
+            for thread in threads:
+                async for message in thread.history(limit=10000):
+                    if message.author.id == author_id:
+                        messages.append(message)
+            return messages
+        except Exception as e:
+            print(f"データベースからのメッセージ取得中にエラーが発生しました: {e}")
+            return []
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.channel.id != 1247421345705492530:
+        if message.author.bot:
             return
-
-        if message.author == self.bot.user:
-            return
-
-        response_channel_id = 1024642680577331200
-        response_channel = self.bot.get_channel(response_channel_id)
-        if not response_channel:
-            print(f"応答チャンネルが見つかりません: {response_channel_id}")
-            return
-
-        past_messages = self.fetch_messages_from_db(message.author.id)
-        if not past_messages:
-            await message.channel.send("過去のメッセージが見つかりませんでした。")
-            return
-
-        past_message = random.choice(past_messages)
-        webhook = await self.get_webhook(response_channel)
-        await webhook.send(
-            past_message[2],  # content
-            username=message.author.display_name,
-            avatar_url=message.author.avatar.url
-        )
-
-def fetch_messages_from_db(self, author_id):
-    try:
-        print(f"Connecting to the database: dbname={DB_NAME}, user={DB_USER}, host={DB_HOST}, port={DB_PORT}")
-        connection = psycopg2.connect(
-            dbname=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            host=DB_HOST,
-            port=DB_PORT
-        )
-        cursor = connection.cursor()
-
-        cursor.execute("""
-            SELECT message_id, author_id, content, created_at
-            FROM messages
-            WHERE author_id = %s
-            ORDER BY random()
-            LIMIT 1000;
-        """, (author_id,))
-        messages = cursor.fetchall()
-        cursor.close()
-        connection.close()
-        return messages
-    except Exception as e:
-        print(f"データベースからのメッセージ取得中にエラーが発生しました: {e}")
-        return []
-
-    async def get_webhook(self, channel):
-        webhooks = await channel.webhooks()
-        for webhook in webhooks:
-            if webhook.user == self.bot.user:
-                return webhook
-        return await channel.create_webhook(name="PastSelfWebhook")
+        history_forum_id = 1024642680577331200
+        history_forum = self.bot.get_channel(history_forum_id)
+        if message.channel.id in [1245562745269780531, 1117864819442335824, 1117859740970651798, 1247166684121268266]:
+            messages = await self.fetch_messages(history_forum, message.author.id)
+            if messages:
+                random_message = random.choice(messages)
+                webhook = await message.channel.create_webhook(name=random_message.author.display_name)
+                await webhook.send(random_message.content, username=random_message.author.display_name, avatar_url=random_message.author.avatar_url)
+                await webhook.delete()
 
 async def setup(bot):
     await bot.add_cog(PastSelf(bot))
+
+# 手動でメッセージを保存するための関数
+async def save_messages_to_db(channel_id):
+    past_self = PastSelf(commands.Bot(command_prefix='/'))
+    await past_self.fetch_and_save_messages(channel_id)
