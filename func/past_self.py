@@ -103,9 +103,6 @@ async def setup(bot):
     await bot.add_cog(PastSelf(bot))
 
 # 手動でメッセージを保存するための関数
-async def save_messages_to_db(channel_id):
-    intents = discord.Intents.default()
-    intents.message_content = True
-    bot = commands.Bot(command_prefix='/', intents=intents)
+async def fetch_and_save_messages(bot, forum_id):
     past_self = PastSelf(bot)
-    await past_self.fetch_and_save_messages(channel_id)
+    await past_self.fetch_and_save_messages(forum_id)
