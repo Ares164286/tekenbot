@@ -1,3 +1,4 @@
+import discord
 import asyncpg
 import os
 from discord.ext import tasks, commands
