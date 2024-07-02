@@ -30,12 +30,13 @@ class PastSelf(commands.Cog):
             return
 
         messages = []
-        async for thread in forum_channel.threads:
-            async for message in thread.history(limit=1000):
+        threads = forum_channel.threads
+        for thread in threads:
+            async for message in thread.history(limit=10000):
                 messages.append(message)
 
-        async for thread in forum_channel.archived_threads(limit=None):
-            async for message in thread.history(limit=10000):
+        async for archived_thread in forum_channel.archived_threads(limit=None):
+            async for message in archived_thread.history(limit=10000):
                 messages.append(message)
 
         # データベースにメッセージを保存
