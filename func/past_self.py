@@ -1,6 +1,7 @@
 import discord
 import os
 import psycopg2
+import random
 from discord.ext import tasks, commands
 from discord.ext.commands import Bot
 
@@ -22,15 +23,20 @@ class PastSelf(commands.Cog):
         history_channel_id = 1024642680577331200
         await self.fetch_and_save_messages(history_channel_id)
 
-    async def fetch_and_save_messages(self, channel_id):
-        channel = self.bot.get_channel(channel_id)
-        if not channel:
-            print(f"チャンネルが見つかりません: {channel_id}")
+    async def fetch_and_save_messages(self, forum_channel_id):
+        forum_channel = self.bot.get_channel(forum_channel_id)
+        if not forum_channel:
+            print(f"フォーラムチャンネルが見つかりません: {forum_channel_id}")
             return
 
         messages = []
-        async for message in channel.history(limit=1000):
-            messages.append(message)
+        async for thread in forum_channel.threads:
+            async for message in thread.history(limit=1000):
+                messages.append(message)
+
+        async for thread in forum_channel.archived_threads(limit=None):
+            async for message in thread.history(limit=10000):
+                messages.append(message)
 
         # データベースにメッセージを保存
         self.save_messages_to_db(messages)
