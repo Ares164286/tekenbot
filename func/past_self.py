@@ -1,7 +1,6 @@
 import discord
 import asyncpg
 import os
-import random
 from discord.ext import tasks, commands
 
 class PastSelf(commands.Cog):
@@ -23,12 +22,9 @@ class PastSelf(commands.Cog):
         channel = self.bot.get_channel(channel_id)
         threads = []
         if isinstance(channel, discord.ForumChannel):
-            async for thread in channel.threads:
-                threads.append(thread)
-            async for archived_thread in channel.archived_threads(limit=None):
-                threads.append(archived_thread)
+            threads = await self.fetch_all_threads(channel)
         else:
-            threads = [channel]
+            threads.append(channel)
 
         messages = []
         for thread in threads:
@@ -43,6 +39,14 @@ class PastSelf(commands.Cog):
                 })
 
         await self.save_messages_to_db(messages)
+
+    async def fetch_all_threads(self, forum_channel):
+        threads = []
+        async for thread in forum_channel.threads():
+            threads.append(thread)
+        async for archived_thread in forum_channel.archived_threads(limit=None):
+            threads.append(archived_thread)
+        return threads
 
     async def save_messages_to_db(self, messages):
         conn = await asyncpg.connect(
