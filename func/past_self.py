@@ -2,6 +2,7 @@ import discord
 from discord.ext import tasks, commands
 import psycopg2
 import os
+import random
 
 DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
@@ -85,5 +86,8 @@ async def setup(bot):
 
 # 手動でメッセージを保存するための関数
 async def save_messages_to_db(channel_id):
-    past_self = PastSelf(commands.Bot(command_prefix='/'))
+    intents = discord.Intents.default()
+    intents.message_content = True
+    bot = commands.Bot(command_prefix='/', intents=intents)
+    past_self = PastSelf(bot)
     await past_self.fetch_and_save_messages(channel_id)
