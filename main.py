@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands
 import commands as cmd  # commands.pyからインポート
 import diceroll.roll_parser as roll_parser  # roll_parserをインポート
-from func.past_self import save_messages_to_db  # 手動保存関数をインポート
 
 # 環境変数からDiscordボットのトークンを取得
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
