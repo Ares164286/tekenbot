@@ -42,7 +42,7 @@ class PastSelf(commands.Cog):
 
     async def fetch_all_threads(self, forum_channel):
         threads = []
-        async for thread in forum_channel.threads():
+        async for thread in forum_channel.threads:
             threads.append(thread)
         async for archived_thread in forum_channel.archived_threads(limit=None):
             threads.append(archived_thread)
