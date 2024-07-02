@@ -1,17 +1,24 @@
 import discord
 import asyncpg
 import os
+import random
 from discord.ext import tasks, commands
+from datetime import datetime
 
 class PastSelf(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.history_channel_id = 1024642680577331200  # 履歴を保存するチャンネルID
+        self.watch_channel_id = 1247421345705492530  # 監視するチャンネルID
         self.fetch_messages_task.start()
 
     @tasks.loop(hours=12)
     async def fetch_messages_task(self):
         await self.fetch_and_save_messages(self.history_channel_id)
+
+    @fetch_messages_task.before_loop
+    async def before_fetch_messages_task(self):
+        await self.bot.wait_until_ready()
 
     async def fetch_and_save_messages(self, channel_id):
         channel = self.bot.get_channel(channel_id)
@@ -60,6 +67,53 @@ class PastSelf(commands.Cog):
             ''', message['message_id'], message['author_id'], message['content'], message['created_at'])
 
         await conn.close()
+
+    @commands.command(name="save_history_cmd")
+    async def save_history(self, ctx):
+        await self.fetch_and_save_messages(self.history_channel_id)
+        await ctx.send("メッセージ履歴の保存が完了しました。")
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.channel.id != self.watch_channel_id or message.author.bot:
+            return
+
+        user_message = await self.get_random_user_message(message.author.id)
+        if user_message:
+            webhook = await self.get_webhook(message.channel)
+            await webhook.send(
+                content=user_message["content"],
+                username=message.author.display_name,
+                avatar_url=message.author.avatar_url
+            )
+
+    async def get_random_user_message(self, author_id):
+        conn = await asyncpg.connect(
+            user=os.getenv('PGUSER'),
+            password=os.getenv('PGPASSWORD'),
+            database=os.getenv('PGDATABASE'),
+            host=os.getenv('PGHOST'),
+            port=os.getenv('PGPORT')
+        )
+
+        message = await conn.fetchrow('''
+            SELECT content
+            FROM messages
+            WHERE author_id = $1
+            ORDER BY random()
+            LIMIT 1
+        ''', author_id)
+
+        await conn.close()
+        return message
+
+    async def get_webhook(self, channel):
+        webhooks = await channel.webhooks()
+        if webhooks:
+            return webhooks[0]
+
+        webhook = await channel.create_webhook(name="PastSelfBot")
+        return webhook
 
 async def setup(bot):
     await bot.add_cog(PastSelf(bot))
