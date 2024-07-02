@@ -14,7 +14,32 @@ DB_PORT = os.getenv('DB_PORT')
 class PastSelf(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.ensure_table_exists()
         self.fetch_messages_task.start()
+
+    def ensure_table_exists(self):
+        try:
+            connection = psycopg2.connect(
+                dbname=DB_NAME,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                host=DB_HOST,
+                port=DB_PORT
+            )
+            cursor = connection.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS messages (
+                    message_id BIGINT PRIMARY KEY,
+                    author_id BIGINT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at TIMESTAMP NOT NULL
+                );
+            """)
+            connection.commit()
+            cursor.close()
+            connection.close()
+        except Exception as e:
+            print(f"テーブル作成中にエラーが発生しました: {e}")
 
     @tasks.loop(hours=12)
     async def fetch_messages_task(self):
@@ -75,6 +100,7 @@ class PastSelf(commands.Cog):
             connection.commit()
             cursor.close()
             connection.close()
+            print(f"保存されたメッセージの数: {len(messages)}")
         except Exception as e:
             print(f"データベースへのメッセージ保存中にエラーが発生しました: {e}")
 
@@ -122,6 +148,12 @@ class PastSelf(commands.Cog):
                 webhook = await message.channel.create_webhook(name=random_message.author.display_name)
                 await webhook.send(random_message.content, username=random_message.author.display_name, avatar_url=random_message.author.avatar_url)
                 await webhook.delete()
+
+    @commands.command(name='save_history')
+    async def save_history(self, ctx):
+        history_forum_id = 1024642680577331200
+        await self.fetch_and_save_messages(history_forum_id)
+        await ctx.send("メッセージの保存が完了しました")
 
 async def setup(bot):
     await bot.add_cog(PastSelf(bot))
