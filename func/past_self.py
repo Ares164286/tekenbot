@@ -1,13 +1,11 @@
-import discord
-from discord.ext import tasks, commands
 import asyncpg
 import os
+from discord.ext import tasks, commands
 
 class PastSelf(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.history_channel_id = 1024642680577331200
-        self.target_channel_id = 1247421345705492530
+        self.history_channel_id = 1024642680577331200  # 履歴を保存するチャンネルID
         self.fetch_messages_task.start()
 
     @tasks.loop(hours=12)
@@ -15,56 +13,52 @@ class PastSelf(commands.Cog):
         await self.fetch_and_save_messages(self.history_channel_id)
 
     async def fetch_and_save_messages(self, channel_id):
-        forum_channel = self.bot.get_channel(channel_id)
-        if not forum_channel:
-            print("フォーラムチャンネルが見つかりません")
-            return
+        channel = self.bot.get_channel(channel_id)
+        if isinstance(channel, discord.ForumChannel):
+            threads = [thread async for thread in channel.threads] + [thread async for thread in channel.archived_threads(limit=None)]
+        else:
+            threads = [channel]
 
-        async with asyncpg.create_pool(dsn=os.getenv("DATABASE_URL")) as pool:
-            async with pool.acquire() as connection:
-                await connection.execute('''
-                    CREATE TABLE IF NOT EXISTS messages (
-                        message_id BIGINT PRIMARY KEY,
-                        author_id BIGINT,
-                        content TEXT,
-                        created_at TIMESTAMP
-                    )
-                ''')
+        messages = []
+        for thread in threads:
+            async for message in thread.history(limit=10000):
+                if message.author.bot:
+                    continue
+                messages.append({
+                    "message_id": message.id,
+                    "author_id": message.author.id,
+                    "content": message.content,
+                    "created_at": message.created_at
+                })
 
-                threads = forum_channel.threads
-                for thread in threads:
-                    async for message in thread.history(limit=10000):
-                        await connection.execute('''
-                            INSERT INTO messages (message_id, author_id, content, created_at)
-                            VALUES ($1, $2, $3, $4)
-                            ON CONFLICT (message_id) DO NOTHING
-                        ''', message.id, message.author.id, message.content, message.created_at)
+        await self.save_messages_to_db(messages)
 
-    @commands.command(name='save_history')
-    async def save_history(self, ctx):
-        await self.fetch_and_save_messages(self.history_channel_id)
-        await ctx.send("メッセージの保存が完了しました")
+    async def save_messages_to_db(self, messages):
+        conn = await asyncpg.connect(
+            user=os.getenv('PGUSER'),
+            password=os.getenv('PGPASSWORD'),
+            database=os.getenv('PGDATABASE'),
+            host=os.getenv('PGHOST'),
+            port=os.getenv('PGPORT')
+        )
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.channel.id != self.target_channel_id or message.author.bot:
-            return
+        await conn.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                message_id BIGINT PRIMARY KEY,
+                author_id BIGINT,
+                content TEXT,
+                created_at TIMESTAMPTZ
+            )
+        ''')
 
-        async with asyncpg.create_pool(dsn=os.getenv("DATABASE_URL")) as pool:
-            async with pool.acquire() as connection:
-                rows = await connection.fetch('''
-                    SELECT content
-                    FROM messages
-                    WHERE author_id = $1
-                    ORDER BY random()
-                    LIMIT 1
-                ''', message.author.id)
+        for message in messages:
+            await conn.execute('''
+                INSERT INTO messages (message_id, author_id, content, created_at)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (message_id) DO NOTHING
+            ''', message['message_id'], message['author_id'], message['content'], message['created_at'])
 
-                if rows:
-                    past_message = rows[0]['content']
-                    webhook = await message.channel.create_webhook(name=message.author.display_name)
-                    await webhook.send(past_message, username=message.author.display_name, avatar_url=message.author.avatar.url)
-                    await webhook.delete()
+        await conn.close()
 
 async def setup(bot):
     await bot.add_cog(PastSelf(bot))
