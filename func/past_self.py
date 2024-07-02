@@ -3,7 +3,6 @@ import asyncpg
 import os
 import random
 from discord.ext import tasks, commands
-from datetime import datetime
 
 class PastSelf(commands.Cog):
     def __init__(self, bot):
@@ -24,16 +23,16 @@ class PastSelf(commands.Cog):
         channel = self.bot.get_channel(channel_id)
         threads = []
         if isinstance(channel, discord.ForumChannel):
-            threads.extend(channel.threads)
-            archived_threads = await channel.archived_threads(limit=None).flatten()
-            threads.extend(archived_threads)
+            async for thread in channel.threads:
+                threads.append(thread)
+            async for archived_thread in channel.archived_threads(limit=None):
+                threads.append(archived_thread)
         else:
             threads = [channel]
 
         messages = []
         for thread in threads:
-            history = await thread.history(limit=10000).flatten()
-            for message in history:
+            async for message in thread.history(limit=10000):
                 if message.author.bot:
                     continue
                 messages.append({
