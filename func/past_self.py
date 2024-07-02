@@ -93,31 +93,32 @@ class PastSelf(commands.Cog):
             avatar_url=message.author.avatar.url
         )
 
-    def fetch_messages_from_db(self, author_id):
-        try:
-            connection = psycopg2.connect(
-                dbname=DB_NAME,
-                user=DB_USER,
-                password=DB_PASSWORD,
-                host=DB_HOST,
-                port=DB_PORT
-            )
-            cursor = connection.cursor()
+def fetch_messages_from_db(self, author_id):
+    try:
+        print(f"Connecting to the database: dbname={DB_NAME}, user={DB_USER}, host={DB_HOST}, port={DB_PORT}")
+        connection = psycopg2.connect(
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            host=DB_HOST,
+            port=DB_PORT
+        )
+        cursor = connection.cursor()
 
-            cursor.execute("""
-                SELECT message_id, author_id, content, created_at
-                FROM messages
-                WHERE author_id = %s
-                ORDER BY random()
-                LIMIT 1000;
-            """, (author_id,))
-            messages = cursor.fetchall()
-            cursor.close()
-            connection.close()
-            return messages
-        except Exception as e:
-            print(f"データベースからのメッセージ取得中にエラーが発生しました: {e}")
-            return []
+        cursor.execute("""
+            SELECT message_id, author_id, content, created_at
+            FROM messages
+            WHERE author_id = %s
+            ORDER BY random()
+            LIMIT 1000;
+        """, (author_id,))
+        messages = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return messages
+    except Exception as e:
+        print(f"データベースからのメッセージ取得中にエラーが発生しました: {e}")
+        return []
 
     async def get_webhook(self, channel):
         webhooks = await channel.webhooks()
