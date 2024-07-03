@@ -7,8 +7,8 @@ class SaveMessages(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.history_channel_ids = [
-            1247535324440170546,  # チャンネルID1
-            1117859740970651798,  # チャンネルID2
+            1024642680577331200,  # 雑談用フォーラム
+            1150826225334505643,  # 新規用チャットルーム
             # 他のチャンネルIDを追加
         ]
         self.fetch_messages_task.start()
