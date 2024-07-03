@@ -13,42 +13,58 @@ class PastSelf(commands.Cog):
         if message.channel.id != self.watch_channel_id or message.author.bot:
             return
 
-        user_message = await self.get_random_user_message(message.author.id)
-        if user_message:
-            webhook = await self.get_webhook(message.channel)
-            await webhook.send(
-                content=user_message["content"],
-                username=message.author.display_name,
-                avatar_url=message.author.avatar_url
-            )
+        try:
+            user_message = await self.get_random_user_message(message.author.id)
+            if user_message:
+                webhook = await self.get_webhook(message.channel)
+                await webhook.send(
+                    content=user_message["content"],
+                    username=message.author.display_name,
+                    avatar_url=message.author.avatar_url
+                )
+        except Exception as e:
+            print(f"メッセージ送信中にエラーが発生しました: {e}")
 
     async def get_random_user_message(self, author_id):
-        conn = await asyncpg.connect(
-            user=os.getenv('PGUSER'),
-            password=os.getenv('PGPASSWORD'),
-            database=os.getenv('PGDATABASE'),
-            host=os.getenv('PGHOST'),
-            port=os.getenv('PGPORT')
-        )
+        conn = None
+        try:
+            conn = await asyncpg.connect(
+                user=os.getenv('PGUSER'),
+                password=os.getenv('PGPASSWORD'),
+                database=os.getenv('PGDATABASE'),
+                host=os.getenv('PGHOST'),
+                port=os.getenv('PGPORT')
+            )
 
-        message = await conn.fetchrow('''
-            SELECT content
-            FROM messages
-            WHERE author_id = $1
-            ORDER BY random()
-            LIMIT 1
-        ''', author_id)
+            message = await conn.fetchrow('''
+                SELECT content
+                FROM messages
+                WHERE author_id = $1
+                ORDER BY random()
+                LIMIT 1
+            ''', author_id)
 
-        await conn.close()
-        return message
+            return message
+
+        except asyncpg.PostgresError as e:
+            print(f"データベース接続中にエラーが発生しました: {e}")
+            return None
+        finally:
+            if conn:
+                await conn.close()
 
     async def get_webhook(self, channel):
-        webhooks = await channel.webhooks()
-        if webhooks:
-            return webhooks[0]
+        try:
+            webhooks = await channel.webhooks()
+            if webhooks:
+                return webhooks[0]
 
-        webhook = await channel.create_webhook(name="PastSelfBot")
-        return webhook
+            webhook = await channel.create_webhook(name="PastSelfBot")
+            return webhook
+
+        except discord.DiscordException as e:
+            print(f"Webhook操作中にエラーが発生しました: {e}")
+            return None
 
 async def setup(bot):
     await bot.add_cog(PastSelf(bot))
