@@ -17,11 +17,12 @@ class PastSelf(commands.Cog):
             user_message = await self.get_random_user_message(message.author.id)
             if user_message:
                 webhook = await self.get_webhook(message.channel)
-                await webhook.send(
-                    content=user_message["content"],
-                    username=message.author.display_name,
-                    avatar_url=message.author.avatar_url
-                )
+                if webhook:
+                    await webhook.send(
+                        content=user_message["content"],
+                        username=message.author.display_name,
+                        avatar_url=message.author.avatar.url if message.author.avatar else None
+                    )
         except Exception as e:
             print(f"メッセージ送信中にエラーが発生しました: {e}")
 
@@ -68,3 +69,5 @@ class PastSelf(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(PastSelf(bot))
+    print("PastSelf cog has been loaded")
+
