@@ -6,76 +6,91 @@ from discord.ext import tasks, commands
 class SaveMessages(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.history_channel_id = 1024642680577331200  # 履歴を保存するチャンネルID
+        self.history_channel_ids = [
+            1024642680577331200,  # 雑談用フォーラム
+            1150826225334505643,  # 新規用チャットルーム
+            # 他のチャンネルIDを追加
+        ]
         self.fetch_messages_task.start()
 
     @tasks.loop(hours=12)
     async def fetch_messages_task(self):
-        await self.fetch_and_save_messages(self.history_channel_id)
-
-    @fetch_messages_task.before_loop
-    async def before_fetch_messages_task(self):
-        await self.bot.wait_until_ready()
+        for channel_id in self.history_channel_ids:
+            await self.fetch_and_save_messages(channel_id)
 
     async def fetch_and_save_messages(self, channel_id):
-        channel = self.bot.get_channel(channel_id)
-        threads = []
-        if isinstance(channel, discord.ForumChannel):
-            threads = await self.fetch_all_threads(channel)
-        else:
-            threads.append(channel)
+        try:
+            channel = self.bot.get_channel(channel_id)
+            if not channel:
+                print(f"チャンネルが見つかりません: {channel_id}")
+                continue
 
-        messages = []
-        for thread in threads:
+            if isinstance(channel, discord.ForumChannel):
+                threads = await self.fetch_all_threads(channel)
+                for thread in threads:
+                    await self.fetch_and_save_thread_messages(thread)
+            else:
+                await self.fetch_and_save_channel_messages(channel)
+
+        except Exception as e:
+            print(f"メッセージ取得中にエラーが発生しました: {e}")
+
+    async def fetch_and_save_channel_messages(self, channel):
+        try:
+            messages = []
+            async for message in channel.history(limit=10000):
+                messages.append((message.id, message.author.id, message.content, message.created_at))
+
+            await self.save_messages_to_db(messages)
+            print(f"メッセージを保存しました: {len(messages)}件 - チャンネル: {channel.name}")
+        except Exception as e:
+            print(f"チャンネル {channel.name} からのメッセージ取得中にエラーが発生しました: {e}")
+
+    async def fetch_and_save_thread_messages(self, thread):
+        try:
+            messages = []
             async for message in thread.history(limit=10000):
-                if message.author.bot:
-                    continue
-                messages.append({
-                    "message_id": message.id,
-                    "author_id": message.author.id,
-                    "content": message.content,
-                    "created_at": message.created_at
-                })
+                messages.append((message.id, message.author.id, message.content, message.created_at))
 
-        await self.save_messages_to_db(messages)
+            await self.save_messages_to_db(messages)
+            print(f"メッセージを保存しました: {len(messages)}件 - スレッド: {thread.name}")
+        except Exception as e:
+            print(f"スレッド {thread.name} からのメッセージ取得中にエラーが発生しました: {e}")
 
     async def fetch_all_threads(self, forum_channel):
-        # ここで非同期処理を行わずにスレッドを取得
-        threads = list(forum_channel.threads)
-
-        return threads
+        try:
+            threads = [thread async for thread in forum_channel.threads()]
+            archived_threads = [thread async for thread in forum_channel.archived_threads(limit=None)]
+            return threads + archived_threads
+        except Exception as e:
+            print(f"フォーラムチャンネル {forum_channel.name} からのスレッド取得中にエラーが発生しました: {e}")
+            return []
 
     async def save_messages_to_db(self, messages):
-        conn = await asyncpg.connect(
-            user=os.getenv('PGUSER'),
-            password=os.getenv('PGPASSWORD'),
-            database=os.getenv('PGDATABASE'),
-            host=os.getenv('PGHOST'),
-            port=os.getenv('PGPORT')
-        )
-
-        await conn.execute('''
-            CREATE TABLE IF NOT EXISTS messages (
-                message_id BIGINT PRIMARY KEY,
-                author_id BIGINT,
-                content TEXT,
-                created_at TIMESTAMPTZ
+        conn = None
+        try:
+            conn = await asyncpg.connect(
+                user=os.getenv('PGUSER'),
+                password=os.getenv('PGPASSWORD'),
+                database=os.getenv('PGDATABASE'),
+                host=os.getenv('PGHOST'),
+                port=os.getenv('PGPORT')
             )
-        ''')
 
-        for message in messages:
-            await conn.execute('''
-                INSERT INTO messages (message_id, author_id, content, created_at)
-                VALUES ($1, $2, $3, $4)
-                ON CONFLICT (message_id) DO NOTHING
-            ''', message['message_id'], message['author_id'], message['content'], message['created_at'])
+            async with conn.transaction():
+                await conn.executemany('''
+                    INSERT INTO messages(message_id, author_id, content, created_at)
+                    VALUES($1, $2, $3, $4)
+                ''', messages)
 
-        await conn.close()
-
-    @commands.command(name="save_history_cmd")
-    async def save_history(self, ctx):
-        await self.fetch_and_save_messages(self.history_channel_id)
-        await ctx.send("メッセージ履歴の保存が完了しました。")
+            print("メッセージの保存が完了しました")
+        except asyncpg.PostgresError as e:
+            print(f"データベース保存中にエラーが発生しました: {e}")
+        finally:
+            if conn:
+                await conn.close()
 
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
+    print("SaveMessages cog has been loaded")
+
