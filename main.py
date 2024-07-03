@@ -2,7 +2,6 @@ import os
 import discord
 from discord.ext import commands
 import commands as cmd  # commands.pyからインポート
-import commandsadmin as cmd_admin  # commandsadmin.pyからインポート
 import diceroll.roll_parser as roll_parser  # roll_parserをインポート
 
 # 環境変数からDiscordボットのトークンを取得
