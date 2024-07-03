@@ -2,6 +2,8 @@ import os
 import discord
 from discord.ext import commands
 import commands as cmd  # commands.pyからインポート
+import commandsadmin as cmd_admin  # commandsadmin.pyからインポート
+import helpadmin as help_admin  # helpadmin.pyからインポート
 import diceroll.roll_parser as roll_parser  # roll_parserをインポート
 
 # 環境変数からDiscordボットのトークンを取得
@@ -30,12 +32,12 @@ async def on_ready():
 
     await client.change_presence(status=discord.Status.online, activity=discord.CustomActivity(name='あれすくんを監視中'))
 
-    # Load the cogs from func and funcslash
+    # Load the activity report, yubaba, wakeup, save_messages, and past_self cogs
     await client.load_extension('funcslash.activity_report')
     await client.load_extension('funcslash.yubaba')
     await client.load_extension('funcslash.wakeup')
-    await client.load_extension('func.past_self')
     await client.load_extension('func.save_messages')
+    await client.load_extension('func.past_self')
 
     try:
         synced = await client.tree.sync()
@@ -55,7 +57,7 @@ async def on_message(message):
 
     # ボットがメンションされた場合の処理
     if client.user.mentioned_in(message):
-        await message.channel.send("コマンド一覧→ /ヘルプ, /へるぷ")
+        await message.channel.send("コマンド一覧→ /ヘルプ, /へるぷ\n管理者コマンド一覧→ /管理者ヘルプ")
         return
 
     # DMメッセージの場合
@@ -64,18 +66,17 @@ async def on_message(message):
         return
 
     # サーバーメッセージの場合
-    if message.channel.id in TARGET_CHANNEL_IDS:
-        if message.content.startswith('/'):
-            await client.process_commands(message)
+    if message.content.startswith('/'):
+        await client.process_commands(message)
+    else:
+        # ダイスロールコマンドを解析
+        response = await roll_parser.parse_roll_command(message.content)
+        if response:
+            user_name_message = f'＞{message.author.name}'
+            await message.channel.send(user_name_message)
+            await message.channel.send(response)
         else:
-            # ダイスロールコマンドを解析
-            response = await roll_parser.parse_roll_command(message.content)
-            if response:
-                user_name_message = f'＞{message.author.name}'
-                await message.channel.send(user_name_message)
-                await message.channel.send(response)
-            else:
-                await client.process_commands(message)
+            await client.process_commands(message)
 
 async def handle_dm_message(message):
     # DMメッセージを処理するロジック
@@ -94,9 +95,22 @@ async def execute_command(ctx, function, *args):
     else:
         await function(ctx)
 
-# 各コマンドを辞書から設定
+# 一般コマンドを辞書から設定
 for command, function in cmd.commands_dict.items():
     async def wrapper(ctx, function=function, *, args=None):
+        if args:
+            await execute_command(ctx, function, args)
+        else:
+            await execute_command(ctx, function)
+    wrapper.__name__ = command  # これでコマンド名を設定
+    client.command(name=command)(wrapper)
+
+# 管理者コマンドを辞書から設定
+for command, function in cmd_admin.commands_admin_dict.items():
+    async def wrapper(ctx, function=function, *, args=None):
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.send("このコマンドを使用する権限がありません。")
+            return
         if args:
             await execute_command(ctx, function, args)
         else:
