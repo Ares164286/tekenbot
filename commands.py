@@ -31,6 +31,6 @@ commands_dict = {
     "へるぷ": help_cmd.send_help,
     "ヘルプ": help_cmd.send_help,
     "フラッシュワード": flash_word.flash_word,
-    "hb": hitandblow.start_game
+    "hb": hitandblow.start_game,
     "履歴を保存": save_messages.SaveMessages.save_history_cmd,
 }
