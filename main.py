@@ -56,7 +56,7 @@ async def on_message(message):
 
     # ボットがメンションされた場合の処理
     if client.user.mentioned_in(message):
-        await message.channel.send("コマンド一覧→ /ヘルプ, /へるぷ\n管理者コマンド一覧→ /管理者ヘルプ")
+        await message.channel.send("コマンド一覧→ /ヘルプ, /へるぷ")
         return
 
     # DMメッセージの場合
@@ -97,19 +97,6 @@ async def execute_command(ctx, function, *args):
 # 一般コマンドを辞書から設定
 for command, function in cmd.commands_dict.items():
     async def wrapper(ctx, function=function, *, args=None):
-        if args:
-            await execute_command(ctx, function, args)
-        else:
-            await execute_command(ctx, function)
-    wrapper.__name__ = command  # これでコマンド名を設定
-    client.command(name=command)(wrapper)
-
-# 管理者コマンドを辞書から設定
-for command, function in cmd_admin.commands_admin_dict.items():
-    async def wrapper(ctx, function=function, *, args=None):
-        if not ctx.author.guild_permissions.administrator:
-            await ctx.send("このコマンドを使用する権限がありません。")
-            return
         if args:
             await execute_command(ctx, function, args)
         else:
