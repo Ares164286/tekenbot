@@ -18,12 +18,18 @@ class SaveMessages(commands.Cog):
         for channel_id in self.history_channel_ids:
             await self.fetch_and_save_messages(channel_id)
 
+    @commands.command(name='履歴を保存')
+    async def save_history_cmd(self, ctx):
+        for channel_id in self.history_channel_ids:
+            await self.fetch_and_save_messages(channel_id)
+        await ctx.send("メッセージ履歴の保存が完了しました。")
+
     async def fetch_and_save_messages(self, channel_id):
         try:
             channel = self.bot.get_channel(channel_id)
             if not channel:
                 print(f"チャンネルが見つかりません: {channel_id}")
-                return  # 修正: continueの代わりにreturnを使用
+                return
 
             if isinstance(channel, discord.ForumChannel):
                 threads = await self.fetch_all_threads(channel)
@@ -77,12 +83,20 @@ class SaveMessages(commands.Cog):
                 port=os.getenv('PGPORT')
             )
 
-            await self.create_table_if_not_exists(conn)
-
             async with conn.transaction():
+                await conn.execute('''
+                    CREATE TABLE IF NOT EXISTS messages (
+                        message_id BIGINT PRIMARY KEY,
+                        author_id BIGINT,
+                        content TEXT,
+                        created_at TIMESTAMPTZ
+                    )
+                ''')
+
                 await conn.executemany('''
                     INSERT INTO messages(message_id, author_id, content, created_at)
                     VALUES($1, $2, $3, $4)
+                    ON CONFLICT (message_id) DO NOTHING
                 ''', messages)
 
             print("メッセージの保存が完了しました")
@@ -91,20 +105,6 @@ class SaveMessages(commands.Cog):
         finally:
             if conn:
                 await conn.close()
-
-    async def create_table_if_not_exists(self, conn):
-        try:
-            await conn.execute('''
-                CREATE TABLE IF NOT EXISTS messages (
-                    message_id BIGINT PRIMARY KEY,
-                    author_id BIGINT,
-                    content TEXT,
-                    created_at TIMESTAMPTZ
-                )
-            ''')
-            print("テーブルが作成されました")
-        except asyncpg.PostgresError as e:
-            print(f"テーブル作成中にエラーが発生しました: {e}")
 
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
