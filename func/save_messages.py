@@ -77,6 +77,8 @@ class SaveMessages(commands.Cog):
                 port=os.getenv('PGPORT')
             )
 
+            await self.create_table_if_not_exists(conn)
+
             async with conn.transaction():
                 await conn.executemany('''
                     INSERT INTO messages(message_id, author_id, content, created_at)
@@ -89,6 +91,20 @@ class SaveMessages(commands.Cog):
         finally:
             if conn:
                 await conn.close()
+
+    async def create_table_if_not_exists(self, conn):
+        try:
+            await conn.execute('''
+                CREATE TABLE IF NOT EXISTS messages (
+                    message_id BIGINT PRIMARY KEY,
+                    author_id BIGINT,
+                    content TEXT,
+                    created_at TIMESTAMPTZ
+                )
+            ''')
+            print("テーブルが作成されました")
+        except asyncpg.PostgresError as e:
+            print(f"テーブル作成中にエラーが発生しました: {e}")
 
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
