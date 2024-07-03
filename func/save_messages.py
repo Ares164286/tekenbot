@@ -41,7 +41,8 @@ class SaveMessages(commands.Cog):
 
     async def fetch_all_threads(self, forum_channel):
         threads = [thread async for thread in forum_channel.threads]
-        threads.extend([archived_thread async for archived_thread in forum_channel.archived_threads(limit=None)])
+        archived_threads = [archived_thread async for archived_thread in forum_channel.archived_threads(limit=None)]
+        threads.extend(archived_threads)
         return threads
 
     async def save_messages_to_db(self, messages):
