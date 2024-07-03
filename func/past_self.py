@@ -18,11 +18,12 @@ class PastSelf(commands.Cog):
             if user_message:
                 webhook = await self.get_webhook(message.channel)
                 if webhook:
-                    server_icon_url = message.guild.icon.url if message.guild.icon else None
+                    member = message.guild.get_member(message.author.id)
+                    avatar_url = member.display_avatar.url if member else None
                     await webhook.send(
                         content=user_message["content"],
-                        username=message.author.display_name,
-                        avatar_url=server_icon_url
+                        username=member.display_name if member else message.author.display_name,
+                        avatar_url=avatar_url
                     )
         except Exception as e:
             print(f"メッセージ送信中にエラーが発生しました: {e}")
