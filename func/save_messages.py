@@ -7,8 +7,8 @@ class SaveMessages(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.history_channel_ids = [
-            1024642680577331200,  # 雑談用フォーラム
-            1150826225334505643,  # 新規用チャットルーム
+            1247535324440170546,  # チャンネルID1
+            1117859740970651798,  # チャンネルID2
             # 他のチャンネルIDを追加
         ]
         self.fetch_messages_task.start()
@@ -23,7 +23,7 @@ class SaveMessages(commands.Cog):
             channel = self.bot.get_channel(channel_id)
             if not channel:
                 print(f"チャンネルが見つかりません: {channel_id}")
-                continue
+                return  # 修正: continueの代わりにreturnを使用
 
             if isinstance(channel, discord.ForumChannel):
                 threads = await self.fetch_all_threads(channel)
@@ -59,7 +59,7 @@ class SaveMessages(commands.Cog):
 
     async def fetch_all_threads(self, forum_channel):
         try:
-            threads = [thread async for thread in forum_channel.threads()]
+            threads = [thread async for thread in forum_channel.threads]
             archived_threads = [thread async for thread in forum_channel.archived_threads(limit=None)]
             return threads + archived_threads
         except Exception as e:
@@ -93,4 +93,3 @@ class SaveMessages(commands.Cog):
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
     print("SaveMessages cog has been loaded")
-
