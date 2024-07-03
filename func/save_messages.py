@@ -18,12 +18,6 @@ class SaveMessages(commands.Cog):
         for channel_id in self.history_channel_ids:
             await self.fetch_and_save_messages(channel_id)
 
-    @commands.command(name='履歴を保存')
-    async def save_history_cmd(self, ctx):
-        for channel_id in self.history_channel_ids:
-            await self.fetch_and_save_messages(channel_id)
-        await ctx.send("メッセージ履歴の保存が完了しました。")
-
     async def fetch_and_save_messages(self, channel_id):
         try:
             channel = self.bot.get_channel(channel_id)
@@ -87,12 +81,11 @@ class SaveMessages(commands.Cog):
                 await conn.execute('''
                     CREATE TABLE IF NOT EXISTS messages (
                         message_id BIGINT PRIMARY KEY,
-                        author_id BIGINT,
-                        content TEXT,
-                        created_at TIMESTAMPTZ
+                        author_id BIGINT NOT NULL,
+                        content TEXT NOT NULL,
+                        created_at TIMESTAMP NOT NULL
                     )
                 ''')
-
                 await conn.executemany('''
                     INSERT INTO messages(message_id, author_id, content, created_at)
                     VALUES($1, $2, $3, $4)
@@ -105,6 +98,17 @@ class SaveMessages(commands.Cog):
         finally:
             if conn:
                 await conn.close()
+
+    @commands.command(name='履歴を保存')
+    @commands.has_permissions(administrator=True)
+    async def save_history_cmd(self, ctx):
+        try:
+            for channel_id in self.history_channel_ids:
+                await self.fetch_and_save_messages(channel_id)
+            await ctx.send("メッセージの履歴が保存されました。")
+        except Exception as e:
+            print(f"履歴保存中にエラーが発生しました: {e}")
+            await ctx.send("メッセージの履歴保存中にエラーが発生しました。")
 
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
