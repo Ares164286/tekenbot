@@ -7,6 +7,7 @@ import func.stats_7e as stats_7e
 import func.help as help_cmd
 import func.flash_word as flash_word
 import func.hitandblow as hitandblow
+import func.save_messages as save_messages  # save_messagesをインポート
 
 commands_dict = {
     "時間割": call.send_timetable,
