@@ -42,8 +42,7 @@ class SaveMessages(commands.Cog):
     async def fetch_all_threads(self, forum_channel):
         # ここで非同期処理を行わずにスレッドを取得
         threads = list(forum_channel.threads)
-        archived_threads = await forum_channel.archived_threads(limit=None).flatten()
-        threads.extend(archived_threads)
+
         return threads
 
     async def save_messages_to_db(self, messages):
