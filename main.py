@@ -65,17 +65,18 @@ async def on_message(message):
         return
 
     # サーバーメッセージの場合
-    if message.content.startswith('/'):
-        await client.process_commands(message)
-    else:
-        # ダイスロールコマンドを解析
-        response = await roll_parser.parse_roll_command(message.content)
-        if response:
-            user_name_message = f'＞{message.author.name}'
-            await message.channel.send(user_name_message)
-            await message.channel.send(response)
-        else:
+    if message.channel.id in TARGET_CHANNEL_IDS:
+        if message.content.startswith('/'):
             await client.process_commands(message)
+        else:
+            # ダイスロールコマンドを解析
+            response = await roll_parser.parse_roll_command(message.content)
+            if response:
+                user_name_message = f'＞{message.author.name}'
+                await message.channel.send(user_name_message)
+                await message.channel.send(response)
+            else:
+                await client.process_commands(message)
 
 async def handle_dm_message(message):
     # DMメッセージを処理するロジック
