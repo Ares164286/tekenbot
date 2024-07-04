@@ -6,7 +6,7 @@ from discord.ext import commands
 class PastSelf(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.watch_channel_id = 1247421345705492530  # 監視するチャンネルID
+        self.watch_channel_id = 1247421345705492530  # 過去の自分と話す
 
     @commands.Cog.listener()
     async def on_message(self, message):
