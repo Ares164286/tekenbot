@@ -18,6 +18,12 @@ class SaveMessages(commands.Cog):
         for channel_id in self.history_channel_ids:
             await self.fetch_and_save_messages(channel_id)
 
+    @commands.command(name="履歴を保存")
+    async def save_history_cmd(self, ctx):
+        for channel_id in self.history_channel_ids:
+            await self.fetch_and_save_messages(channel_id)
+        await ctx.send("メッセージ履歴の保存が完了しました。")
+
     async def fetch_and_save_messages(self, channel_id):
         try:
             channel = self.bot.get_channel(channel_id)
@@ -39,11 +45,7 @@ class SaveMessages(commands.Cog):
         try:
             messages = []
             async for message in channel.history(limit=10000):
-                messages.append((
-                    message.id, 
-                    message.author.id, 
-                    message.content
-                ))
+                messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
             print(f"メッセージを保存しました: {len(messages)}件 - チャンネル: {channel.name}")
@@ -54,11 +56,7 @@ class SaveMessages(commands.Cog):
         try:
             messages = []
             async for message in thread.history(limit=10000):
-                messages.append((
-                    message.id, 
-                    message.author.id, 
-                    message.content
-                ))
+                messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
             print(f"メッセージを保存しました: {len(messages)}件 - スレッド: {thread.name}")
@@ -67,12 +65,9 @@ class SaveMessages(commands.Cog):
 
     async def fetch_all_threads(self, forum_channel):
         try:
-            threads = []
-            async for thread in forum_channel.threads:
-                threads.append(thread)
-            async for archived_thread in forum_channel.archived_threads(limit=None):
-                threads.append(archived_thread)
-            return threads
+            threads = [thread async for thread in forum_channel.threads]
+            archived_threads = [thread async for thread in forum_channel.archived_threads(limit=None)]
+            return threads + archived_threads
         except Exception as e:
             print(f"フォーラムチャンネル {forum_channel.name} からのスレッド取得中にエラーが発生しました: {e}")
             return []
@@ -88,10 +83,20 @@ class SaveMessages(commands.Cog):
                 port=os.getenv('PGPORT')
             )
 
+            # テーブルが存在しない場合に作成する
+            await conn.execute('''
+                CREATE TABLE IF NOT EXISTS messages (
+                    message_id BIGINT PRIMARY KEY,
+                    author_id BIGINT,
+                    content TEXT
+                )
+            ''')
+
             async with conn.transaction():
                 await conn.executemany('''
                     INSERT INTO messages(message_id, author_id, content)
                     VALUES($1, $2, $3)
+                    ON CONFLICT (message_id) DO NOTHING
                 ''', messages)
 
             print("メッセージの保存が完了しました")
@@ -101,13 +106,6 @@ class SaveMessages(commands.Cog):
             if conn:
                 await conn.close()
 
-    @commands.command(name="履歴を保存")
-    async def save_history_cmd(self, ctx):
-        await ctx.send("メッセージ履歴を保存中...")
-        for channel_id in self.history_channel_ids:
-            await self.fetch_and_save_messages(channel_id)
-        await ctx.send("メッセージ履歴の保存が完了しました")
-
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
-    print("SaveMessages cogがロードされました")
+    print("SaveMessages cog has been loaded")
