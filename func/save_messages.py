@@ -101,11 +101,6 @@ class SaveMessages(commands.Cog):
             if conn:
                 await conn.close()
 
-    @commands.command(name="履歴を保存")
-    async def save_history_cmd(self, ctx):
-        await self.fetch_messages_task()
-        await ctx.send("履歴の保存が完了しました。")
-
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
     print("SaveMessages cog has been loaded")
