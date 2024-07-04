@@ -42,3 +42,11 @@ async def random_fusion(ctx):
 
     await change_nickname(ctx, new_name)
     await ctx.send(f"{name1}&{name2}\n「「フュー...ジョン」」\n「「はっ！！！」」\n{ctx.author.name}が「{new_name}」になりました")
+
+async def try_fusion_command(ctx, *, args=None):
+    if args:
+        names = args.split()
+        if len(names) == 2:
+            await fusion(ctx, names[0], names[1])
+            return
+    await fusion(ctx)
