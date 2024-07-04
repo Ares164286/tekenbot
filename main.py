@@ -30,12 +30,12 @@ async def on_ready():
 
     await client.change_presence(status=discord.Status.online, activity=discord.CustomActivity(name='あれすくんを監視中'))
 
-    # Load the activity report, yubaba, wakeup, save_messages, and past_self cogs
+    # Load the activity report, yubaba, and wakeup cogs from funcslash
     await client.load_extension('funcslash.activity_report')
     await client.load_extension('funcslash.yubaba')
     await client.load_extension('funcslash.wakeup')
-    await client.load_extension('func.save_messages')
     await client.load_extension('func.past_self')
+    await client.load_extension('func.save_messages')
 
     try:
         synced = await client.tree.sync()
@@ -94,7 +94,7 @@ async def execute_command(ctx, function, *args):
     else:
         await function(ctx)
 
-# 一般コマンドを辞書から設定
+# 各コマンドを辞書から設定
 for command, function in cmd.commands_dict.items():
     async def wrapper(ctx, function=function, *, args=None):
         if args:
