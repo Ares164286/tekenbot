@@ -44,7 +44,7 @@ class SaveMessages(commands.Cog):
                     message.id, 
                     message.author.id, 
                     message.content, 
-                    message.created_at.replace(tzinfo=timezone.utc).isoformat()  # UTCタイムゾーンに変換しISOフォーマットの文字列に変換
+                    message.created_at.replace(tzinfo=timezone.utc)  # UTCタイムゾーンに変換
                 ))
 
             await self.save_messages_to_db(messages)
@@ -60,7 +60,7 @@ class SaveMessages(commands.Cog):
                     message.id, 
                     message.author.id, 
                     message.content, 
-                    message.created_at.replace(tzinfo=timezone.utc).isoformat()  # UTCタイムゾーンに変換しISOフォーマットの文字列に変換
+                    message.created_at.replace(tzinfo=timezone.utc)  # UTCタイムゾーンに変換
                 ))
 
             await self.save_messages_to_db(messages)
