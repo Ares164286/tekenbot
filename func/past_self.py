@@ -14,23 +14,23 @@ class PastSelf(commands.Cog):
             return
 
         try:
-            print(f"{message.author.display_name}からのメッセージを処理中 - チャンネル: {message.channel.name}")
             user_message = await self.get_random_user_message(message.author.id)
             if user_message:
                 webhook = await self.get_webhook(message.channel)
                 if webhook:
+                    member = message.guild.get_member(message.author.id)
+                    if member and member.avatar:
+                        avatar_url = member.avatar.url
+                    else:
+                        avatar_url = message.guild.icon.url if message.guild.icon else None
+
                     await webhook.send(
                         content=user_message["content"],
                         username=message.author.display_name,
-                        avatar_url=message.author.display_avatar.url if message.author.display_avatar else None
+                        avatar_url=avatar_url
                     )
-                    print(f"送信されたメッセージ: {user_message['content']} - ユーザー: {message.author.display_name}")
-                else:
-                    print("Webhookの取得または作成に失敗しました")
-            else:
-                print("ユーザーのメッセージが見つかりませんでした")
         except Exception as e:
-            print(f"メッセージ処理中にエラーが発生しました: {e}")
+            print(f"メッセージ送信中にエラーが発生しました: {e}")
 
     async def get_random_user_message(self, author_id):
         conn = None
