@@ -59,8 +59,8 @@ class SaveMessages(commands.Cog):
 
     async def fetch_all_threads(self, forum_channel):
         try:
-            threads = [thread async for thread in forum_channel.threads]
-            archived_threads = [thread async for thread in forum_channel.archived_threads(limit=None)]
+            threads = forum_channel.threads
+            archived_threads = await forum_channel.archived_threads(limit=None).flatten()
             return threads + archived_threads
         except Exception as e:
             print(f"フォーラムチャンネル {forum_channel.name} からのスレッド取得中にエラーが発生しました: {e}")
@@ -77,15 +77,17 @@ class SaveMessages(commands.Cog):
                 port=os.getenv('PGPORT')
             )
 
+            # テーブルが存在しない場合に作成
+            await conn.execute('''
+                CREATE TABLE IF NOT EXISTS messages (
+                    message_id BIGINT PRIMARY KEY,
+                    author_id BIGINT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at TIMESTAMP NOT NULL
+                )
+            ''')
+
             async with conn.transaction():
-                await conn.execute('''
-                    CREATE TABLE IF NOT EXISTS messages (
-                        message_id BIGINT PRIMARY KEY,
-                        author_id BIGINT NOT NULL,
-                        content TEXT NOT NULL,
-                        created_at TIMESTAMP NOT NULL
-                    )
-                ''')
                 await conn.executemany('''
                     INSERT INTO messages(message_id, author_id, content, created_at)
                     VALUES($1, $2, $3, $4)
@@ -99,16 +101,10 @@ class SaveMessages(commands.Cog):
             if conn:
                 await conn.close()
 
-    @commands.command(name='履歴を保存')
-    @commands.has_permissions(administrator=True)
+    @commands.command(name="履歴を保存")
     async def save_history_cmd(self, ctx):
-        try:
-            for channel_id in self.history_channel_ids:
-                await self.fetch_and_save_messages(channel_id)
-            await ctx.send("メッセージの履歴が保存されました。")
-        except Exception as e:
-            print(f"履歴保存中にエラーが発生しました: {e}")
-            await ctx.send("メッセージの履歴保存中にエラーが発生しました。")
+        await self.fetch_messages_task()
+        await ctx.send("履歴の保存が完了しました。")
 
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
