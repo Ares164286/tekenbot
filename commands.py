@@ -6,7 +6,6 @@ import func.stats_6e as stats_6e
 import func.stats_7e as stats_7e
 import func.help as help_cmd
 import func.flash_word as flash_word  # flash_wordをインポート
-import func.save_messages as save_messages  # save_messagesをインポート
 
 commands_dict = {
     "時間割": call.send_timetable,
@@ -31,5 +30,4 @@ commands_dict = {
     "へるぷ": help_cmd.send_help,
     "ヘルプ": help_cmd.send_help,
     "フラッシュワード": flash_word.flash_word,  # フラッシュワードコマンドを追加
-    "履歴を保存": save_messages.save_history_cmd,  # save_history_cmdコマンドを追加
 }
