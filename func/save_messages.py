@@ -2,7 +2,6 @@ import discord
 import asyncpg
 import os
 from discord.ext import tasks, commands
-from datetime import timezone
 
 class SaveMessages(commands.Cog):
     def __init__(self, bot):
@@ -43,8 +42,7 @@ class SaveMessages(commands.Cog):
                 messages.append((
                     message.id, 
                     message.author.id, 
-                    message.content, 
-                    message.created_at.replace(tzinfo=timezone.utc)  # UTCタイムゾーンに変換
+                    message.content
                 ))
 
             await self.save_messages_to_db(messages)
@@ -59,8 +57,7 @@ class SaveMessages(commands.Cog):
                 messages.append((
                     message.id, 
                     message.author.id, 
-                    message.content, 
-                    message.created_at.replace(tzinfo=timezone.utc)  # UTCタイムゾーンに変換
+                    message.content
                 ))
 
             await self.save_messages_to_db(messages)
@@ -93,8 +90,8 @@ class SaveMessages(commands.Cog):
 
             async with conn.transaction():
                 await conn.executemany('''
-                    INSERT INTO messages(message_id, author_id, content, created_at)
-                    VALUES($1, $2, $3, $4)
+                    INSERT INTO messages(message_id, author_id, content)
+                    VALUES($1, $2, $3)
                 ''', messages)
 
             print("メッセージの保存が完了しました")
