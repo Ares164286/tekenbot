@@ -6,7 +6,7 @@ from discord.ext import commands
 class PastSelf(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.watch_channel_id = 1247421345705492530  # 過去の自分と話す
+        self.watch_channel_id = 1247421345705492530  # 監視するチャンネルID
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -14,19 +14,23 @@ class PastSelf(commands.Cog):
             return
 
         try:
+            print(f"{message.author.display_name}からのメッセージを処理中 - チャンネル: {message.channel.name}")
             user_message = await self.get_random_user_message(message.author.id)
             if user_message:
                 webhook = await self.get_webhook(message.channel)
                 if webhook:
-                    member = message.guild.get_member(message.author.id)
-                    avatar_url = member.display_avatar.url if member else None
                     await webhook.send(
                         content=user_message["content"],
-                        username=member.display_name if member else message.author.display_name,
-                        avatar_url=avatar_url
+                        username=message.author.display_name,
+                        avatar_url=message.author.display_avatar.url if message.author.display_avatar else None
                     )
+                    print(f"送信されたメッセージ: {user_message['content']} - ユーザー: {message.author.display_name}")
+                else:
+                    print("Webhookの取得または作成に失敗しました")
+            else:
+                print("ユーザーのメッセージが見つかりませんでした")
         except Exception as e:
-            print(f"メッセージ送信中にエラーが発生しました: {e}")
+            print(f"メッセージ処理中にエラーが発生しました: {e}")
 
     async def get_random_user_message(self, author_id):
         conn = None
@@ -71,4 +75,4 @@ class PastSelf(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(PastSelf(bot))
-    print("PastSelf cog has been loaded")
+    print("PastSelf cogがロードされました")
