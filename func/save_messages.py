@@ -9,7 +9,7 @@ class SaveMessages(commands.Cog):
         self.history_channel_ids = [
             1024642680577331200,  # 雑談用フォーラム
             1150826225334505643,  # 新規用チャットルーム
-            # 他のチャンネルIDを追加
+            # 追加のチャンネルID
         ]
         self.fetch_messages_task.start()
 
@@ -18,11 +18,11 @@ class SaveMessages(commands.Cog):
         for channel_id in self.history_channel_ids:
             await self.fetch_and_save_messages(channel_id)
 
-    @commands.command(name="履歴を保存")
+    @commands.command(name="save_history_cmd")
     async def save_history_cmd(self, ctx):
         for channel_id in self.history_channel_ids:
             await self.fetch_and_save_messages(channel_id)
-        await ctx.send("メッセージ履歴の保存が完了しました。")
+        await ctx.send("履歴が保存されました！")
 
     async def fetch_and_save_messages(self, channel_id):
         try:
@@ -32,9 +32,17 @@ class SaveMessages(commands.Cog):
                 return
 
             if isinstance(channel, discord.ForumChannel):
-                threads = await self.fetch_all_threads(channel)
+                threads = await channel.threads()  # スレッドの取得
+                blacklisted_thread_ids = [123456789012345678, 987654321098765432]  # ブラックリストのスレッドID
+
                 for thread in threads:
+                    # スレッドIDがブラックリストに含まれている場合はスキップ
+                    if thread.id in blacklisted_thread_ids:
+                        print(f"スレッド {thread.name} はブラックリストに含まれているためスキップします")
+                        continue
+                    
                     await self.fetch_and_save_thread_messages(thread)
+
             else:
                 await self.fetch_and_save_channel_messages(channel)
 
@@ -48,9 +56,10 @@ class SaveMessages(commands.Cog):
                 messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
-            print(f"メッセージを保存しました: {len(messages)}件 - チャンネル: {channel.name}")
+            print(f"{len(messages)} 件のメッセージが保存されました - チャンネル: {channel.name}")
+
         except Exception as e:
-            print(f"チャンネル {channel.name} からのメッセージ取得中にエラーが発生しました: {e}")
+            print(f"メッセージ取得エラー - チャンネル: {channel.name} エラー: {e}")
 
     async def fetch_and_save_thread_messages(self, thread):
         try:
@@ -59,18 +68,10 @@ class SaveMessages(commands.Cog):
                 messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
-            print(f"メッセージを保存しました: {len(messages)}件 - スレッド: {thread.name}")
-        except Exception as e:
-            print(f"スレッド {thread.name} からのメッセージ取得中にエラーが発生しました: {e}")
+            print(f"{len(messages)} 件のメッセージが保存されました - スレッド: {thread.name}")
 
-    async def fetch_all_threads(self, forum_channel):
-        try:
-            threads = [thread async for thread in forum_channel.threads]
-            archived_threads = [thread async for thread in forum_channel.archived_threads(limit=None)]
-            return threads + archived_threads
         except Exception as e:
-            print(f"フォーラムチャンネル {forum_channel.name} からのスレッド取得中にエラーが発生しました: {e}")
-            return []
+            print(f"メッセージ取得エラー - スレッド: {thread.name} エラー: {e}")
 
     async def save_messages_to_db(self, messages):
         conn = None
@@ -83,29 +84,21 @@ class SaveMessages(commands.Cog):
                 port=os.getenv('PGPORT')
             )
 
-            # テーブルが存在しない場合に作成する
-            await conn.execute('''
-                CREATE TABLE IF NOT EXISTS messages (
-                    message_id BIGINT PRIMARY KEY,
-                    author_id BIGINT,
-                    content TEXT
-                )
-            ''')
-
             async with conn.transaction():
                 await conn.executemany('''
-                    INSERT INTO messages(message_id, author_id, content)
-                    VALUES($1, $2, $3)
+                    INSERT INTO messages (message_id, author_id, content)
+                    VALUES ($1, $2, $3)
                     ON CONFLICT (message_id) DO NOTHING
                 ''', messages)
 
-            print("メッセージの保存が完了しました")
+            print("メッセージがデータベースに保存されました")
+
         except asyncpg.PostgresError as e:
-            print(f"データベース保存中にエラーが発生しました: {e}")
+            print(f"データベースエラー: {e}")
         finally:
             if conn:
                 await conn.close()
 
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
-    print("SaveMessages cog has been loaded")
+    print("SaveMessages cog が読み込まれました")
