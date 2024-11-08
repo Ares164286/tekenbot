@@ -52,7 +52,7 @@ class SaveMessages(commands.Cog):
     async def fetch_and_save_channel_messages(self, channel):
         try:
             messages = []
-            async for message in channel.history(limit=10000):
+            async for message in channel.history(limit=1000000):
                 messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
@@ -64,7 +64,7 @@ class SaveMessages(commands.Cog):
     async def fetch_and_save_thread_messages(self, thread):
         try:
             messages = []
-            async for message in thread.history(limit=10000):
+            async for message in thread.history(limit=1000000):
                 messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
