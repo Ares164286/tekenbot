@@ -1,7 +1,8 @@
 import discord
+from discord import app_commands
+from discord.ext import tasks, commands
 import asyncpg
 import os
-from discord.ext import tasks, commands
 
 class SaveMessages(commands.Cog):
     def __init__(self, bot):
@@ -9,7 +10,7 @@ class SaveMessages(commands.Cog):
         self.history_channel_ids = [
             1024642680577331200,  # 雑談用フォーラム
             1150826225334505643,  # 新規用チャットルーム
-            # 追加のチャンネルID
+            # 必要に応じて追加のチャンネルID
         ]
         self.fetch_messages_task.start()
 
@@ -32,12 +33,10 @@ class SaveMessages(commands.Cog):
                 return
 
             if isinstance(channel, discord.ForumChannel):
-                threads = channel.threads  # () を付けずリストとして取得
-
-                blacklisted_thread_ids = [123456789012345678, 987654321098765432]  # ブラックリストのスレッドID
-
+                threads = channel.threads  # ()を外してリストとして扱う
+                blacklisted_thread_ids = [1047822747398578207, 1168424579081961504, 1243545403371028480, 1149004841499234404, 1053007770103853199, 1033414785913589772, 1033359573039452300, 1029382666149187624]  # ブラックリストのスレッドID
+                            #海底、テイルズオブジアビス、ストグラ観測者の集まり、ディズニーを見る、ゾスク設定、ヤスマルFGO、おまめFGO、FGOを語る
                 for thread in threads:
-                    # スレッドIDがブラックリストに含まれている場合はスキップ
                     if thread.id in blacklisted_thread_ids:
                         print(f"スレッド {thread.name} はブラックリストに含まれているためスキップします")
                         continue
@@ -99,6 +98,38 @@ class SaveMessages(commands.Cog):
         finally:
             if conn:
                 await conn.close()
+
+    # /reset_database スラッシュコマンドの追加
+    @app_commands.command(name="reset_database", description="データベースを完全リセットします")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def reset_database(self, interaction: discord.Interaction):
+        """
+        メッセージデータベースを完全リセットします。
+        管理者のみ実行可能。
+        """
+        conn = None
+        try:
+            conn = await asyncpg.connect(
+                user=os.getenv('PGUSER'),
+                password=os.getenv('PGPASSWORD'),
+                database=os.getenv('PGDATABASE'),
+                host=os.getenv('PGHOST'),
+                port=os.getenv('PGPORT')
+            )
+
+            await conn.execute('TRUNCATE TABLE messages RESTART IDENTITY')
+            await interaction.response.send_message("データベースがリセットされました。すべてのメッセージが削除されました。", ephemeral=True)
+
+        except asyncpg.PostgresError as e:
+            await interaction.response.send_message(f"データベースのリセット中にエラーが発生しました: {e}", ephemeral=True)
+        finally:
+            if conn:
+                await conn.close()
+
+    @reset_database.error
+    async def reset_database_error(self, interaction: discord.Interaction, error):
+        if isinstance(error, app_commands.MissingPermissions):
+            await interaction.response.send_message("このコマンドを実行する権限がありません。", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
