@@ -32,7 +32,8 @@ class SaveMessages(commands.Cog):
                 return
 
             if isinstance(channel, discord.ForumChannel):
-                threads = await channel.threads()  # スレッドの取得
+                threads = channel.threads  # () を付けずリストとして取得
+
                 blacklisted_thread_ids = [123456789012345678, 987654321098765432]  # ブラックリストのスレッドID
 
                 for thread in threads:
