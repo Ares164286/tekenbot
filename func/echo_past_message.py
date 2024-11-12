@@ -6,11 +6,13 @@ from discord.ext import commands
 class EchoPastMessage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        # 監視対象のチャンネルID（例: 置き換えて使用）
+        self.watch_channel_id = 1305836459256840273
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # 自分自身やボットのメッセージは無視
-        if message.author.bot:
+        # 自分自身やボットのメッセージ、監視対象外のチャンネルは無視
+        if message.author.bot or message.channel.id != self.watch_channel_id:
             return
 
         # メッセージに基づいて過去のメッセージを検索
