@@ -22,17 +22,17 @@ TARGET_CHANNEL_IDS = [1245562745269780531, 1117864819442335824, 1117859740970651
 
 @client.event
 async def on_ready():
-    print(f'We have logged in as {client.user}')
-    print("Loading all extensions...")
+    print(f'{client.user} としてログインしました。')
+    print("すべての追加機能を読み込んでいます...")
     try:
         await load_extensions()  # コグのロードを開始
     except Exception as e:
-        print(f"Error loading extensions: {e}")
+        print(f"追加機能のロード中にエラーが発生しました。: {e}")
     for guild in client.guilds:
         bot_member = guild.get_member(client.user.id)
         if bot_member:
             permissions = bot_member.guild_permissions
-            print(f"Permissions in {guild.name}: {permissions}")
+            print(f"{guild.name}での権限: {permissions}")
 
     await client.change_presence(status=discord.Status.online, activity=discord.CustomActivity(name='あれすくんを監視中'))
     
@@ -45,15 +45,15 @@ async def load_extensions():
             await client.load_extension(ext)
             loaded_extensions.append(ext)
         except Exception as e:
-            print(f"Failed to load extension {ext}: {e}")
+            print(f"拡張機能のロードに失敗しました。{ext}: {e}")
 
     # ロードされたコグ一覧を表示
     if loaded_extensions:
-        print("Successfully loaded extensions:")
+        print("すべての追加機能が正常にロードされました。:")
         for ext in loaded_extensions:
             print(f" - {ext}")
     else:
-        print("No extensions were loaded successfully.")
+        print("拡張機能が正常にロードされませんでした。")
 
 @client.event
 async def on_message(message):
