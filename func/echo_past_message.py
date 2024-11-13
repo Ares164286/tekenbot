@@ -6,30 +6,30 @@ from discord.ext import commands
 class EchoPastMessage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # 監視対象のチャンネルIDのリスト
-        self.watch_channel_ids = [
-            1305836459256840273,  # 例: チャンネルID1
-            1306102576143532132,  # 例: チャンネルID2
-            # 必要に応じてさらにチャンネルIDを追加
+        # 監視対象のフォーラムチャンネルIDのリスト
+        self.watch_forum_channel_ids = [
+            1306102576143532132,  # 例: フォーラムチャンネルID1
+            1305836459256840273,  # 例: フォーラムチャンネルID2
         ]
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # 自分自身やボットのメッセージ、監視対象外のチャンネルは無視
-        if message.author.bot or message.channel.id not in self.watch_channel_ids:
+        # 自分自身やボットのメッセージ、フォーラムの監視対象外のスレッドは無視
+        if message.author.bot or not isinstance(message.channel, discord.Thread) or message.channel.parent_id not in self.watch_forum_channel_ids:
             return
 
         # メッセージに基づいて過去のメッセージを検索
         try:
             past_message = await self.find_past_message(message.content)
             if past_message:
-                # Webhookを使って過去のメッセージを発言者の名前で再送信
-                webhook = await self.get_webhook(message.channel)
+                # 親フォーラムチャンネルでWebhookを取得し、スレッドにメッセージを送信
+                webhook = await self.get_webhook(message.channel.parent)
                 if webhook:
                     await webhook.send(
                         content=past_message['content'],
                         username=past_message['author_name'],
-                        avatar_url=past_message['author_avatar']
+                        avatar_url=past_message['author_avatar'],
+                        thread=message.channel  # スレッド内に送信するため指定
                     )
         except Exception as e:
             print(f"エラーハンドリング: メッセージ送信中にエラーが発生しました: {e}")
@@ -88,16 +88,16 @@ class EchoPastMessage(commands.Cog):
 
         return None
 
-    async def get_webhook(self, channel):
+    async def get_webhook(self, forum_channel):
         """
-        チャンネルにWebhookがなければ作成し、既存のものがあればそれを返す。
+        親フォーラムチャンネルにWebhookがなければ作成し、既存のものがあればそれを返す。
         """
         try:
-            webhooks = await channel.webhooks()
+            webhooks = await forum_channel.webhooks()
             if webhooks:
                 return webhooks[0]
             # Webhookがなければ新規作成
-            return await channel.create_webhook(name="EchoPastMessageWebhook")
+            return await forum_channel.create_webhook(name="EchoPastMessageWebhook")
 
         except discord.DiscordException as e:
             print(f"Webhook エラー: {e}")
