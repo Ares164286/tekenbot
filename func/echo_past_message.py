@@ -10,6 +10,7 @@ class EchoPastMessage(commands.Cog):
         self.watch_channel_ids = [
             1305836459256840273,  # テストチャンネル
             1306102576143532132,  # 例: チャンネルID2（テキストチャンネル）
+            1024642680577331200,  #親チャンネル
         ]
         # WebhookのURLを環境変数から取得（スレッド用）
         self.webhook_url = os.getenv('DISCORD_WEBHOOK_URL')  # 環境変数で指定
