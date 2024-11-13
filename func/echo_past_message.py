@@ -37,8 +37,8 @@ class EchoPastMessage(commands.Cog):
             past_message = await self.find_past_message(message.content)
             if past_message:
                 if channel_type == 'スレッド':
-                    # スレッド用のWebhookを使用してメッセージを送信
-                    webhook = discord.Webhook.from_url(self.webhook_url, adapter=discord.RequestsWebhookAdapter())
+                    # スレッド用に親フォーラムチャンネルのWebhookを取得
+                    webhook = await self.get_webhook(message.channel.parent)
                     await webhook.send(
                         content=past_message['content'],
                         username=past_message['author_name'],
@@ -112,7 +112,7 @@ class EchoPastMessage(commands.Cog):
 
     async def get_webhook(self, channel):
         """
-        通常のチャンネル用: チャンネルにWebhookがなければ作成し、既存のものがあればそれを返す。
+        通常のチャンネルおよびフォーラムの親チャンネルにWebhookがなければ作成し、既存のものがあればそれを返す。
         """
         try:
             webhooks = await channel.webhooks()
