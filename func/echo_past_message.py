@@ -115,7 +115,7 @@ class EchoPastMessage(commands.Cog):
                         author = await message.guild.fetch_member(author_id)
                     except discord.NotFound:
                         print("指定されたメンバーが見つかりません。")
-                        await message.channel.send("指定されたメンバーが見つかりません。")
+                        #await message.channel.send("指定されたメンバーが見つかりません。")
                         return None
 
                 author_name = author.display_name  # ニックネームまたはデフォルトの表示名
