@@ -39,6 +39,9 @@ async def setup_extensions():
     await client.load_extension("func.echo_past_message")
     # save_messagesを次にロード
     await client.load_extension("func.save_messages")
+
+    await client.load_extension("func.color_tile_game")
+
     print("Cogのセットアップが完了しました")
 
     # Load the activity report, yubaba, and wakeup cogs from funcslash
