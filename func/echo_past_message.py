@@ -20,6 +20,26 @@ class EchoPastMessage(commands.Cog):
         if message.author.bot:
             return
 
+
+@commands.Cog.listener()
+async def on_message(self, message):
+    if message.author.bot:
+        return
+
+    # デバッグ: メッセージがどこで検出されているか確認
+    print(f"メッセージ検出 - チャンネルID: {message.channel.id}, チャンネル名: {message.channel.name}")
+    
+    if isinstance(message.channel, discord.Thread):
+        print("スレッド内のメッセージです")
+        if message.channel.parent_id not in self.watch_channel_ids:
+            print("親チャンネルが監視対象外です")
+            return
+    elif message.channel.id in self.watch_channel_ids:
+        print("通常のテキストチャンネル内のメッセージです")
+    else:
+        print("監視対象外のチャンネルです")
+        return
+
         # スレッド内のメッセージが親フォーラムチャンネルに含まれるか、通常のテキストチャンネルに含まれるか確認
         if isinstance(message.channel, discord.Thread):
             if message.channel.parent_id not in self.watch_channel_ids:
