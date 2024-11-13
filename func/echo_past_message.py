@@ -16,14 +16,18 @@ class EchoPastMessage(commands.Cog):
             return
 
         # メッセージに基づいて過去のメッセージを検索
-        past_message = await self.find_past_message(message.content)
-        if past_message:
-            # 過去のメッセージを発言者の名前で再送信
-            await message.channel.send(
-                content=past_message['content'],
-                username=past_message['author_name'],
-                avatar_url=past_message['author_avatar'] or message.guild.icon.url if message.guild.icon else None
-            )
+        try:
+            past_message = await self.find_past_message(message.content)
+            if past_message:
+                # 過去のメッセージを発言者の名前で再送信
+                await message.channel.send(
+                    content=past_message['content'],
+                    username=past_message['author_name'],
+                    avatar_url=past_message['author_avatar'] or message.guild.icon.url if message.guild.icon else None
+                )
+        except Exception as e:
+            print(f"エラーハンドリング: メッセージ送信中にエラーが発生しました: {e}")
+            await message.channel.send("エラーが発生しました。もう一度お試しください。")
 
     async def find_past_message(self, content):
         """
@@ -55,13 +59,17 @@ class EchoPastMessage(commands.Cog):
                 author_id = result['author_id']
                 content = result['content']
 
-                # ボットのクライアントからメンバー情報を取得
-                author = await self.bot.fetch_user(author_id)
-                return {
-                    'content': content,
-                    'author_name': author.display_name,
-                    'author_avatar': author.avatar.url if author.avatar else None
-                }
+                try:
+                    # ボットのクライアントからメンバー情報を取得
+                    author = await self.bot.fetch_user(author_id)
+                    return {
+                        'content': content,
+                        'author_name': author.display_name,
+                        'author_avatar': author.avatar.url if author.avatar else None
+                    }
+                except discord.DiscordException as e:
+                    print(f"Discord APIエラー: ユーザー情報の取得中にエラーが発生しました: {e}")
+                    return None
 
         except asyncpg.PostgresError as e:
             print(f"データベースエラー: {e}")
