@@ -6,12 +6,17 @@ from discord.ext import commands
 class EchoPastMessage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.watch_channel_id = 1305836459256840273  # 監視対象のチャンネルID
+        # 監視対象のチャンネルIDのリスト
+        self.watch_channel_ids = [
+            1305836459256840273,  # 例: チャンネルID1
+            1306102576143532132,  # 例: チャンネルID2
+            # 必要に応じてさらにチャンネルIDを追加
+        ]
 
     @commands.Cog.listener()
     async def on_message(self, message):
         # 自分自身やボットのメッセージ、監視対象外のチャンネルは無視
-        if message.author.bot or message.channel.id != self.watch_channel_id:
+        if message.author.bot or message.channel.id not in self.watch_channel_ids:
             return
 
         # メッセージに基づいて過去のメッセージを検索
@@ -33,6 +38,7 @@ class EchoPastMessage(commands.Cog):
     async def find_past_message(self, content):
         """
         ユーザーのメッセージを部分一致で検索して、過去のメッセージから類似するものを取得する。
+        発言者がBotの場合は検索から除外します。
         """
         conn = None
         try:
@@ -45,15 +51,16 @@ class EchoPastMessage(commands.Cog):
                 port=os.getenv('PGPORT')
             )
 
-            # メッセージに含まれる単語で部分一致検索
+            # Botのメッセージを除外しつつ、メッセージに含まれる単語で部分一致検索
             query = '''
                 SELECT content, author_id
                 FROM messages
                 WHERE content ILIKE $1
+                AND author_id != $2
                 ORDER BY random()
                 LIMIT 1
             '''
-            result = await conn.fetchrow(query, f"%{content}%")
+            result = await conn.fetchrow(query, f"%{content}%", self.bot.user.id)
 
             if result:
                 # 発言者情報を取得
