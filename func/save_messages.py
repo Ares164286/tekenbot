@@ -145,4 +145,3 @@ class SaveMessages(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(SaveMessages(bot))
-    print("SaveMessages cog が読み込まれました")
