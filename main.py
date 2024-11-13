@@ -38,7 +38,7 @@ async def on_ready():
     
 # コグのロード
 async def load_extensions():
-    extensions = ["func.color_tile_game", "func.past_self", "func.save_messages", 'funcslash.wakeup', 'funcslash.yubaba', 'funcslash.activity_report']
+    extensions = ["func.color_tile_game", "func.past_self", "func.save_messages", 'funcslash.wakeup', 'funcslash.yubaba', 'funcslash.activity_report', "func.echo_past_messeage"]
     loaded_extensions = []
     for ext in extensions:
         try:
