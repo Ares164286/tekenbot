@@ -138,4 +138,3 @@ class EchoPastMessage(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(EchoPastMessage(bot))
-    print("EchoPastMessage cog が読み込まれました")
