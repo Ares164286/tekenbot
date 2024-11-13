@@ -33,9 +33,12 @@ class SaveMessages(commands.Cog):
                 return
 
             if isinstance(channel, discord.ForumChannel):
-                threads = channel.threads  # ()を外してリストとして扱う
-                blacklisted_thread_ids = [1047822747398578207, 1168424579081961504, 1243545403371028480, 1149004841499234404, 1053007770103853199, 1033414785913589772, 1033359573039452300, 1029382666149187624, 1174711755834933368]  # ブラックリストのスレッドID
-                            #海底、テイルズオブジアビス、ストグラ観測者の集まり、ディズニーを見る、ゾスク設定、ヤスマルFGO、おまめFGO、FGOを語る、過去の自分と対話する
+                threads = channel.threads
+                blacklisted_thread_ids = [
+                    1047822747398578207, 1168424579081961504, 1243545403371028480,
+                    1149004841499234404, 1053007770103853199, 1033414785913589772,
+                    1033359573039452300, 1029382666149187624, 1174711755834933368
+                ]
                 for thread in threads:
                     if thread.id in blacklisted_thread_ids:
                         print(f"スレッド {thread.name} はブラックリストに含まれているためスキップします")
@@ -53,6 +56,11 @@ class SaveMessages(commands.Cog):
         try:
             messages = []
             async for message in channel.history(limit=1000000):
+                # メンションが含まれているメッセージは保存しない
+                if message.mentions or message.role_mentions:
+                    print("メンションが含まれているため、このメッセージは保存しません。")
+                    continue
+
                 messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
@@ -65,6 +73,11 @@ class SaveMessages(commands.Cog):
         try:
             messages = []
             async for message in thread.history(limit=1000000):
+                # メンションが含まれているメッセージは保存しない
+                if message.mentions or message.role_mentions:
+                    print(f"メンションが含まれているため、このメッセージは保存しません - スレッド: {thread.name}")
+                    continue
+
                 messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
@@ -99,14 +112,9 @@ class SaveMessages(commands.Cog):
             if conn:
                 await conn.close()
 
-    # /reset_database スラッシュコマンドの追加
     @app_commands.command(name="reset_database", description="データベースを完全リセットします")
     @app_commands.checks.has_permissions(administrator=True)
     async def reset_database(self, interaction: discord.Interaction):
-        """
-        メッセージデータベースを完全リセットします。
-        管理者のみ実行可能。
-        """
         conn = None
         try:
             conn = await asyncpg.connect(
