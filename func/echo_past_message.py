@@ -72,7 +72,7 @@ class EchoPastMessage(commands.Cog):
                 # ランダムなメッセージリスト
                 responses = [
                     "ﾊﾊ...", "なんかごめんね...", "そういうこともあるって...", 
-                    "次はいいことあるよ多分...", "( ᐛ)ﾊﾞﾅﾅ"
+                    "次はいいことあるよ多分...", "( ᐛ)ﾊﾞﾅﾅ", "そんなこと言ってないで学校来いよ👊😁"
                 ]
                 # ランダムにメッセージを選んで送信
                 await message.channel.send(random.choice(responses))
