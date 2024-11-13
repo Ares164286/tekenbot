@@ -6,32 +6,50 @@ from discord.ext import commands
 class EchoPastMessage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # 監視対象のフォーラムチャンネルIDのリスト
-        self.watch_forum_channel_ids = [
-            1306102576143532132,  # 例: フォーラムチャンネルID1
-            1305836459256840273,  # 例: フォーラムチャンネルID2
+        # 監視対象のフォーラムチャンネルおよび通常のテキストチャンネルIDのリスト
+        self.watch_channel_ids = [
+            1305836459256840273,  # テストチャンネル
+            1306102576143532132,  # 例: チャンネルID2（テキストチャンネル）
         ]
-        # WebhookのURLを設定（DiscordのWebhook URLを指定）
-        self.webhook_url = os.getenv('DISCORD_WEBHOOK_URL')  # 環境変数などで設定
+        # WebhookのURLを環境変数から取得（スレッド用）
+        self.webhook_url = os.getenv('DISCORD_WEBHOOK_URL')  # 環境変数で指定
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # 自分自身やボットのメッセージ、フォーラムの監視対象外のスレッドは無視
-        if message.author.bot or not isinstance(message.channel, discord.Thread) or message.channel.parent_id not in self.watch_forum_channel_ids:
+        # 自分自身やボットのメッセージを無視
+        if message.author.bot:
             return
+
+        # スレッド内のメッセージが親フォーラムチャンネルに含まれるか、通常のテキストチャンネルに含まれるか確認
+        if isinstance(message.channel, discord.Thread):
+            if message.channel.parent_id not in self.watch_channel_ids:
+                return
+            channel_type = 'スレッド'
+        elif message.channel.id in self.watch_channel_ids:
+            channel_type = '通常のテキストチャンネル'
+        else:
+            return  # 監視対象外のチャンネルには反応しない
+
+        print(f"{channel_type}内のメッセージを検出しました: {message.content}")
 
         # メッセージに基づいて過去のメッセージを検索
         try:
             past_message = await self.find_past_message(message.content)
             if past_message:
-                # Webhookを使用して過去のメッセージを発言者の名前で再送信
-                webhook = discord.Webhook.from_url(self.webhook_url, adapter=discord.RequestsWebhookAdapter())
-                await webhook.send(
-                    content=past_message['content'],
-                    username=past_message['author_name'],
-                    avatar_url=past_message['author_avatar'],
-                    thread=message.channel  # スレッド内に送信するため指定
-                )
+                if channel_type == 'スレッド':
+                    # Webhookを使用してスレッドにメッセージを送信
+                    webhook = discord.Webhook.from_url(self.webhook_url, adapter=discord.RequestsWebhookAdapter())
+                    await webhook.send(
+                        content=past_message['content'],
+                        username=past_message['author_name'],
+                        avatar_url=past_message['author_avatar'],
+                        thread=message.channel  # スレッドに送信
+                    )
+                else:
+                    # 通常のテキストチャンネルに直接メッセージを送信
+                    await message.channel.send(
+                        content=past_message['content']
+                    )
         except Exception as e:
             print(f"エラーハンドリング: メッセージ送信中にエラーが発生しました: {e}")
             await message.channel.send("エラーが発生しました。もう一度お試しください。")
