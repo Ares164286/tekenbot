@@ -67,6 +67,8 @@ class EchoPastMessage(commands.Cog):
                     )
                 else:
                     print("Webhookが取得できなかったため、メッセージ送信をスキップしました。")
+            else:
+                await message.channel.send("他のユーザーのメッセージが見つかりませんでした。")
 
         except Exception as e:
             print(f"エラーハンドリング: メッセージ送信中にエラーが発生しました: {e}")
@@ -100,18 +102,23 @@ class EchoPastMessage(commands.Cog):
 
                 # サーバー内のニックネームを取得
                 author = message.guild.get_member(author_id)
-                if author:
-                    author_name = author.display_name  # ニックネームまたはデフォルトの表示名
-                    author_avatar = author.avatar.url if author.avatar else None
-                    return {
-                        'content': content,
-                        'author_id': author_id,
-                        'author_name': author_name,
-                        'author_avatar': author_avatar
-                    }
-                else:
-                    print("指定されたメンバーが見つかりません。")
-                    return None
+                if not author:
+                    # キャッシュに見つからない場合フェッチ
+                    try:
+                        author = await message.guild.fetch_member(author_id)
+                    except discord.NotFound:
+                        print("指定されたメンバーが見つかりません。")
+                        await message.channel.send("指定されたメンバーが見つかりません。")
+                        return None
+
+                author_name = author.display_name  # ニックネームまたはデフォルトの表示名
+                author_avatar = author.avatar.url if author.avatar else None
+                return {
+                    'content': content,
+                    'author_id': author_id,
+                    'author_name': author_name,
+                    'author_avatar': author_avatar
+                }
 
         except asyncpg.PostgresError as e:
             print(f"データベースエラー: {e}")
