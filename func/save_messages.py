@@ -20,11 +20,13 @@ class SaveMessages(commands.Cog):
         for channel_id in self.history_channel_ids:
             await self.fetch_and_save_messages(channel_id)
 
-    @commands.command(name="save_history_cmd")
-    async def save_history_cmd(self, ctx):
+    @app_commands.command(name="save_history", description="指定チャンネルのメッセージ履歴を保存します")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def save_history(self, interaction: discord.Interaction):
+        """履歴を保存するスラッシュコマンド"""
         for channel_id in self.history_channel_ids:
             await self.fetch_and_save_messages(channel_id)
-        await ctx.send("履歴が保存されました！")
+        await interaction.response.send_message("履歴が保存されました！", ephemeral=True)
 
     async def fetch_and_save_messages(self, channel_id):
         try:
