@@ -37,7 +37,7 @@ class EchoPastMessage(commands.Cog):
             past_message = await self.find_past_message(message.content)
             if past_message:
                 if channel_type == 'スレッド':
-                    # Webhookを使用してスレッドにメッセージを送信
+                    # スレッド用のWebhookを使用してメッセージを送信
                     webhook = discord.Webhook.from_url(self.webhook_url, adapter=discord.RequestsWebhookAdapter())
                     await webhook.send(
                         content=past_message['content'],
@@ -46,9 +46,12 @@ class EchoPastMessage(commands.Cog):
                         thread=message.channel  # スレッドに送信
                     )
                 else:
-                    # 通常のテキストチャンネルに直接メッセージを送信
-                    await message.channel.send(
-                        content=past_message['content']
+                    # テキストチャンネルでもWebhookを使用してユーザー名とアイコンをカスタマイズしてメッセージ送信
+                    webhook = await self.get_webhook(message.channel)
+                    await webhook.send(
+                        content=past_message['content'],
+                        username=past_message['author_name'],
+                        avatar_url=past_message['author_avatar']
                     )
         except Exception as e:
             print(f"エラーハンドリング: メッセージ送信中にエラーが発生しました: {e}")
