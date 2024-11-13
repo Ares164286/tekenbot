@@ -23,6 +23,11 @@ TARGET_CHANNEL_IDS = [1245562745269780531, 1117864819442335824, 1117859740970651
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
+    print("Loading all extensions...")
+    try:
+        await load_extensions()  # コグのロードを開始
+    except Exception as e:
+        print(f"Error loading extensions: {e}")
     for guild in client.guilds:
         bot_member = guild.get_member(client.user.id)
         if bot_member:
@@ -30,35 +35,25 @@ async def on_ready():
             print(f"Permissions in {guild.name}: {permissions}")
 
     await client.change_presence(status=discord.Status.online, activity=discord.CustomActivity(name='あれすくんを監視中'))
+    
+# コグのロード
+async def load_extensions():
+    extensions = ["func.color_tile_game", "func.past_self", "func.save_messages", 'funcslash.wakeup', 'funcslash.yubaba', 'funcslash.activity_report']
+    loaded_extensions = []
+    for ext in extensions:
+        try:
+            await client.load_extension(ext)
+            loaded_extensions.append(ext)
+        except Exception as e:
+            print(f"Failed to load extension {ext}: {e}")
 
-        # Cogのロード順序を設定
-    await setup_extensions()
-
-async def setup_extensions():
-    # echo_past_messageを先にロード
-    await client.load_extension("func.echo_past_message")
-    # save_messagesを次にロード
-    await client.load_extension("func.save_messages")
-
-    await client.load_extension("func.color_tile_game")
-
-    print("Cogのセットアップが完了しました")
-
-    # Bot起動時にコグをロード
-client.loop.run_until_complete(load_extensions())
-
-    # Load the activity report, yubaba, and wakeup cogs from funcslash
-    await client.load_extension('funcslash.activity_report')
-    await client.load_extension('funcslash.yubaba')
-    await client.load_extension('funcslash.wakeup')
-    await client.load_extension('func.past_self')
-    await client.load_extension('func.save_messages')
-
-    try:
-        synced = await client.tree.sync()
-        print(f"Synced {len(synced)} command(s): {[cmd.name for cmd in synced]}")
-    except Exception as e:
-        print(f"Failed to sync commands: {e}")
+    # ロードされたコグ一覧を表示
+    if loaded_extensions:
+        print("Successfully loaded extensions:")
+        for ext in loaded_extensions:
+            print(f" - {ext}")
+    else:
+        print("No extensions were loaded successfully.")
 
 @client.event
 async def on_message(message):
