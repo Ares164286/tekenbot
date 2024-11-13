@@ -44,6 +44,9 @@ async def setup_extensions():
 
     print("Cogのセットアップが完了しました")
 
+    # Bot起動時にコグをロード
+client.loop.run_until_complete(load_extensions())
+
     # Load the activity report, yubaba, and wakeup cogs from funcslash
     await client.load_extension('funcslash.activity_report')
     await client.load_extension('funcslash.yubaba')
