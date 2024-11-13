@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord import ui
+from discord import app_commands, ui
 import random
 
 GRID_WIDTH = 5  # 表示範囲を小さく設定
@@ -43,11 +43,11 @@ class DiscordColorTileGame(commands.Cog):
         self.score = 0
         self.game_active = False
 
-    @commands.command(name="start_colortile")
-    async def start_game(self, ctx):
+    @app_commands.command(name="start_colortile", description="カラータイルのゲームを開始します")
+    async def start_game(self, interaction: discord.Interaction):
         """Discord上でカラータイルのゲームを開始"""
         if self.game_active:
-            await ctx.send("既にゲームが進行中です。")
+            await interaction.response.send_message("既にゲームが進行中です。", ephemeral=True)
             return
 
         # ゲームの初期化
@@ -56,11 +56,11 @@ class DiscordColorTileGame(commands.Cog):
         self.score = 0
         self.game_active = True
 
-        await ctx.send("カラータイルのゲームを開始します！")
+        await interaction.response.send_message("カラータイルのゲームを開始します！")
 
         # 盤面を表示
         self.view = ColorTileGameView(self)
-        await ctx.send(f"スコア: {self.score}", view=self.view)
+        await interaction.followup.send(f"スコア: {self.score}", view=self.view)
 
     def place_initial_tiles(self):
         """初期タイルのランダム配置"""
@@ -71,7 +71,7 @@ class DiscordColorTileGame(commands.Cog):
     async def select_tile(self, interaction, row, col):
         """タイルを選択し、色を変更する処理"""
         if not self.game_active:
-            await interaction.response.send_message("ゲームが開始されていません。`!start_colortile`で開始してください。", ephemeral=True)
+            await interaction.response.send_message("ゲームが開始されていません。`/start_colortile`で開始してください。", ephemeral=True)
             return
 
         color_to_clear = self.grid[row][col]
@@ -86,7 +86,7 @@ class DiscordColorTileGame(commands.Cog):
             # ゲームクリアの確認
             if all(tile == self.grid[0][0] for row in self.grid for tile in row if tile):
                 self.game_active = False
-                await interaction.followup.send("おめでとうございます！全てのタイルが同じ色になりました！")
+                await interaction.followup.send("おめでとうございます！すべてのタイルが同じ色になりました！")
 
     def clear_adjacent_tiles(self, row, col, color):
         """隣接する同じ色のタイルを消去"""
@@ -100,11 +100,11 @@ class DiscordColorTileGame(commands.Cog):
                     cleared_count += self.clear_adjacent_tiles(r, c, color)
         return cleared_count
 
-    @commands.command(name="reset_colortile")
-    async def reset_game(self, ctx):
+    @app_commands.command(name="reset_colortile", description="カラータイルのゲームをリセットします")
+    async def reset_game(self, interaction: discord.Interaction):
         """ゲームをリセット"""
         self.game_active = False
-        await ctx.send("ゲームがリセットされました。新しいゲームを開始できます。")
+        await interaction.response.send_message("ゲームがリセットされました。新しいゲームを開始できます。")
 
 async def setup(bot):
     await bot.add_cog(DiscordColorTileGame(bot))
