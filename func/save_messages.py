@@ -9,8 +9,8 @@ class SaveMessages(commands.Cog):
         self.bot = bot
         self.history_channel_ids = [
             1024642680577331200,  # 雑談用フォーラム
-            1150826225334505643,  # 新規用チャットルーム
             1174915955374174299,  # ゲーム用フォーラム
+            1150826225334505643,  # 新規用チャットルーム
             # 必要に応じて追加のチャンネルID
         ]
         self.fetch_messages_task.start()
