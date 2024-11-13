@@ -17,7 +17,6 @@ class EchoPastMessage(commands.Cog):
             1306102576143532132,  # 例: スレッドID1
             # 必要に応じてスレッドIDを追加
         ]
-        
         self.webhook_url = os.getenv('DISCORD_WEBHOOK_URL')  # 環境変数で指定
 
     @commands.Cog.listener()
