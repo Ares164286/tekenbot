@@ -55,16 +55,18 @@ class SaveMessages(commands.Cog):
     async def fetch_and_save_channel_messages(self, channel):
         try:
             messages = []
+            skip_count = 0  # スキップしたメッセージの数をカウント
             async for message in channel.history(limit=1000000):
                 # メンションが含まれているメッセージは保存しない
                 if message.mentions or message.role_mentions:
-                    print("メンションが含まれているため、このメッセージは保存しません。")
+                    skip_count += 1
                     continue
 
                 messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
             print(f"{len(messages)} 件のメッセージが保存されました - チャンネル: {channel.name}")
+            print(f"{skip_count} 件のメッセージがメンションを含むためスキップされました - チャンネル: {channel.name}")
 
         except Exception as e:
             print(f"メッセージ取得エラー - チャンネル: {channel.name} エラー: {e}")
@@ -72,16 +74,18 @@ class SaveMessages(commands.Cog):
     async def fetch_and_save_thread_messages(self, thread):
         try:
             messages = []
+            skip_count = 0  # スキップしたメッセージの数をカウント
             async for message in thread.history(limit=1000000):
                 # メンションが含まれているメッセージは保存しない
                 if message.mentions or message.role_mentions:
-                    print(f"メンションが含まれているため、このメッセージは保存しません - スレッド: {thread.name}")
+                    skip_count += 1
                     continue
 
                 messages.append((message.id, message.author.id, message.content))
 
             await self.save_messages_to_db(messages)
             print(f"{len(messages)} 件のメッセージが保存されました - スレッド: {thread.name}")
+            print(f"{skip_count} 件のメッセージがメンションを含むためスキップされました - スレッド: {thread.name}")
 
         except Exception as e:
             print(f"メッセージ取得エラー - スレッド: {thread.name} エラー: {e}")
