@@ -71,8 +71,8 @@ class EchoPastMessage(commands.Cog):
             else:
                 # ランダムなメッセージリスト
                 responses = [
-                    "ﾊﾊ...", "なんかごめんね...", "そういうこともあるって...",
-                    "次はいいことあるよ多分...", "( ᐛ)ﾊﾞﾅﾅ", "そんなこと言ってないで学校来いよ👊😁"
+                    "ﾊﾊ...", "なんかごめんね...", "そういうこともあるって...", "そんなこと言ってないで学校来いよ👊😁",
+                    "次はいいことあるよ多分...", "( ᐛ)ﾊﾞﾅﾅ", "........."
                 ]
                 # ランダムにメッセージを選んで送信
                 await message.channel.send(random.choice(responses))
@@ -110,13 +110,14 @@ class EchoPastMessage(commands.Cog):
                 # サーバー内のニックネームを取得
                 author = message.guild.get_member(author_id)
                 if not author:
-                    # キャッシュに見つからない場合フェッチ
-                    try:
-                        author = await message.guild.fetch_member(author_id)
-                    except discord.NotFound:
-                        print("指定されたメンバーが見つかりません。")
-                        #await message.channel.send("指定されたメンバーが見つかりません。")
-                        return None
+                    # メンバーが存在しない場合、「老害」とデフォルトアイコンを設定
+                    default_avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"  # デフォルトのアイコンURL
+                    return {
+                        'content': content,
+                        'author_id': author_id,
+                        'author_name': "老害",
+                        'author_avatar': default_avatar_url
+                    }
 
                 author_name = author.display_name  # ニックネームまたはデフォルトの表示名
                 author_avatar = author.avatar.url if author.avatar else None
