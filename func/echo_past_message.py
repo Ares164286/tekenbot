@@ -1,6 +1,7 @@
 import discord
 import asyncpg
 import os
+import random
 from discord.ext import commands
 
 class EchoPastMessage(commands.Cog):
@@ -68,7 +69,13 @@ class EchoPastMessage(commands.Cog):
                 else:
                     print("Webhookが取得できなかったため、メッセージ送信をスキップしました。")
             else:
-                await message.channel.send("他のユーザーのメッセージが見つかりませんでした。")
+                # ランダムなメッセージリスト
+                responses = [
+                    "ﾊﾊ...", "なんかごめんね...", "そういうこともあるって...", 
+                    "次はいいことあるよ多分...", "( ᐛ)ﾊﾞﾅﾅ"
+                ]
+                # ランダムにメッセージを選んで送信
+                await message.channel.send(random.choice(responses))
 
         except Exception as e:
             print(f"エラーハンドリング: メッセージ送信中にエラーが発生しました: {e}")
