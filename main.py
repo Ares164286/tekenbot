@@ -41,7 +41,11 @@ async def on_ready():
         synced = await client.tree.sync()
         print(f"Synced {len(synced)} command(s): {[cmd.name for cmd in synced]}")
     except Exception as e:
-        print(f"Failed to sync commands: {e}")
+        print(f"Failed to sync commands: {e}")]
+
+async def setup_extensions():
+    # echo_past_messageを先にロード
+    await bot.load_extension("func.echo_past_message")
 
 @client.event
 async def on_message(message):
