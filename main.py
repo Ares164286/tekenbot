@@ -30,6 +30,16 @@ async def on_ready():
 
     await client.change_presence(status=discord.Status.online, activity=discord.CustomActivity(name='あれすくんを監視中'))
 
+        # Cogのロード順序を設定
+    await setup_extensions()
+
+async def setup_extensions():
+    # echo_past_messageを先にロード
+    await client.load_extension("func.echo_past_message")
+    # save_messagesを次にロード
+    await client.load_extension("func.save_messages")
+    print("Cogのセットアップが完了しました")
+
     # Load the activity report, yubaba, and wakeup cogs from funcslash
     await client.load_extension('funcslash.activity_report')
     await client.load_extension('funcslash.yubaba')
@@ -42,10 +52,6 @@ async def on_ready():
         print(f"Synced {len(synced)} command(s): {[cmd.name for cmd in synced]}")
     except Exception as e:
         print(f"Failed to sync commands: {e}")]
-
-async def setup_extensions():
-    # echo_past_messageを先にロード
-    await bot.load_extension("func.echo_past_message")
 
 @client.event
 async def on_message(message):
