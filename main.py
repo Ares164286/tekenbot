@@ -12,6 +12,7 @@ intents = discord.Intents.default()
 intents.members = True  # メンバー情報を取得するためのIntentを有効化
 intents.message_content = True  # メッセージの内容を取得するためのIntentを有効化
 intents.dm_messages = True  # DMメッセージを取得するためのIntentを有効化
+intents.guilds = True
 
 # Discordのクライアントインスタンスを作成
 client = commands.Bot(command_prefix='/', intents=intents)
