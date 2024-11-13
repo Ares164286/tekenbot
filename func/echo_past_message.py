@@ -6,8 +6,7 @@ from discord.ext import commands
 class EchoPastMessage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # 監視対象のチャンネルID（例: 置き換えて使用）
-        self.watch_channel_id = 1305836459256840273
+        self.watch_channel_id = 1305836459256840273  # 監視対象のチャンネルID
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -19,12 +18,14 @@ class EchoPastMessage(commands.Cog):
         try:
             past_message = await self.find_past_message(message.content)
             if past_message:
-                # 過去のメッセージを発言者の名前で再送信
-                await message.channel.send(
-                    content=past_message['content'],
-                    username=past_message['author_name'],
-                    avatar_url=past_message['author_avatar'] or message.guild.icon.url if message.guild.icon else None
-                )
+                # Webhookを使って過去のメッセージを発言者の名前で再送信
+                webhook = await self.get_webhook(message.channel)
+                if webhook:
+                    await webhook.send(
+                        content=past_message['content'],
+                        username=past_message['author_name'],
+                        avatar_url=past_message['author_avatar']
+                    )
         except Exception as e:
             print(f"エラーハンドリング: メッセージ送信中にエラーが発生しました: {e}")
             await message.channel.send("エラーが発生しました。もう一度お試しください。")
@@ -80,10 +81,21 @@ class EchoPastMessage(commands.Cog):
 
         return None
 
+    async def get_webhook(self, channel):
+        """
+        チャンネルにWebhookがなければ作成し、既存のものがあればそれを返す。
+        """
+        try:
+            webhooks = await channel.webhooks()
+            if webhooks:
+                return webhooks[0]
+            # Webhookがなければ新規作成
+            return await channel.create_webhook(name="EchoPastMessageWebhook")
+
+        except discord.DiscordException as e:
+            print(f"Webhook エラー: {e}")
+            return None
+
 async def setup(bot):
-    # save_messagesがロードされていることを確認
-    if "func.save_messages" not in bot.extensions:
-        await bot.load_extension("func.save_messages")
-    
     await bot.add_cog(EchoPastMessage(bot))
     print("EchoPastMessage cog が読み込まれました")
