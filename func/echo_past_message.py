@@ -39,13 +39,18 @@ class EchoPastMessage(commands.Cog):
         print(f"{channel_type}内のメッセージを検出しました: {message.content}")
 
         try:
-            # 発言者自身のメッセージをスキップし、他のユーザーのメッセージを探す
+            # 最大10回まで他のユーザーのメッセージを探す
+            attempts = 0
             past_message = await self.find_past_message(message)
             while past_message and past_message['author_id'] == message.author.id:
                 print("発言者自身のメッセージが見つかったため、次のメッセージを探します。")
                 past_message = await self.find_past_message(message)
+                attempts += 1
+                if attempts >= 10:
+                    print("他のユーザーのメッセージが見つからなかったため、返信を打ち切ります。")
+                    past_message = None
+                    break
 
-            # 適切なメッセージが見つかった場合のみ返信を行う
             if past_message:
                 webhook = None
                 if channel_type == 'スレッド':
