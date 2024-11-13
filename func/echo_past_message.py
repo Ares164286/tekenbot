@@ -81,5 +81,9 @@ class EchoPastMessage(commands.Cog):
         return None
 
 async def setup(bot):
+    # save_messagesがロードされていることを確認
+    if "func.save_messages" not in bot.extensions:
+        await bot.load_extension("func.save_messages")
+    
     await bot.add_cog(EchoPastMessage(bot))
     print("EchoPastMessage cog が読み込まれました")
