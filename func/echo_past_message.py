@@ -16,7 +16,7 @@ class EchoPastMessage(commands.Cog):
             1306102576143532132,  # 例: スレッドID1
             # 必要に応じてスレッドIDを追加
         ]
-        # WebhookのURLを環境変数から取得（スレッド用）
+        
         self.webhook_url = os.getenv('DISCORD_WEBHOOK_URL')  # 環境変数で指定
 
     @commands.Cog.listener()
@@ -24,9 +24,9 @@ class EchoPastMessage(commands.Cog):
         if message.author.bot:
             return
 
-        # スレッド内のメッセージが指定されたスレッドIDであるか確認
         if isinstance(message.channel, discord.Thread):
-            # スレッドIDが許可リストにない場合は返信しない
+            if message.channel.parent_id not in self.watch_channel_ids:
+                return
             if message.channel.id not in self.allowed_thread_ids:
                 print(f"スレッド {message.channel.id} は許可されていないため、返信をスキップします。")
                 return
@@ -39,7 +39,13 @@ class EchoPastMessage(commands.Cog):
         print(f"{channel_type}内のメッセージを検出しました: {message.content}")
 
         try:
-            past_message = await self.find_past_message(message.content)
+            # 発言者自身のメッセージをスキップし、他のユーザーのメッセージを探す
+            past_message = await self.find_past_message(message)
+            while past_message and past_message['author_id'] == message.author.id:
+                print("発言者自身のメッセージが見つかったため、次のメッセージを探します。")
+                past_message = await self.find_past_message(message)
+
+            # 適切なメッセージが見つかった場合のみ返信を行う
             if past_message:
                 webhook = None
                 if channel_type == 'スレッド':
@@ -56,11 +62,13 @@ class EchoPastMessage(commands.Cog):
                     )
                 else:
                     print("Webhookが取得できなかったため、メッセージ送信をスキップしました。")
+
         except Exception as e:
             print(f"エラーハンドリング: メッセージ送信中にエラーが発生しました: {e}")
             await message.channel.send("エラーが発生しました。もう一度お試しください。")
 
-    async def find_past_message(self, content):
+    async def find_past_message(self, message):
+        content = message.content
         conn = None
         try:
             conn = await asyncpg.connect(
@@ -85,15 +93,19 @@ class EchoPastMessage(commands.Cog):
                 author_id = result['author_id']
                 content = result['content']
 
-                try:
-                    author = await self.bot.fetch_user(author_id)
+                # サーバー内のニックネームを取得
+                author = message.guild.get_member(author_id)
+                if author:
+                    author_name = author.display_name  # ニックネームまたはデフォルトの表示名
+                    author_avatar = author.avatar.url if author.avatar else None
                     return {
                         'content': content,
-                        'author_name': author.display_name,
-                        'author_avatar': author.avatar.url if author.avatar else None
+                        'author_id': author_id,
+                        'author_name': author_name,
+                        'author_avatar': author_avatar
                     }
-                except discord.DiscordException as e:
-                    print(f"Discord APIエラー: ユーザー情報の取得中にエラーが発生しました: {e}")
+                else:
+                    print("指定されたメンバーが見つかりません。")
                     return None
 
         except asyncpg.PostgresError as e:
