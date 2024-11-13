@@ -51,7 +51,7 @@ async def setup_extensions():
         synced = await client.tree.sync()
         print(f"Synced {len(synced)} command(s): {[cmd.name for cmd in synced]}")
     except Exception as e:
-        print(f"Failed to sync commands: {e}")]
+        print(f"Failed to sync commands: {e}")
 
 @client.event
 async def on_message(message):
