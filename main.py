@@ -45,7 +45,7 @@ async def load_extensions():
             await client.load_extension(ext)
             loaded_extensions.append(ext)
         except Exception as e:
-            print(f"拡張機能のロードに失敗しました。{ext}: {e}")
+            print(f"拡張機能のロードに失敗しました。{ext}: {type(e).__name__} - {e}")
 
     # ロードされたコグ一覧を表示
     if loaded_extensions:
@@ -54,6 +54,7 @@ async def load_extensions():
             print(f" - {ext}")
     else:
         print("拡張機能が正常にロードされませんでした。")
+
 
 @client.event
 async def on_message(message):
