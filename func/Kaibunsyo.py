@@ -19,10 +19,23 @@ class Kaibunsyo(commands.Cog):
             1024642680577331200,  # 雑談用フォーラム
             1174915955374174299,  # ゲーム用フォーラム
         ]
+        
+        # ブラックリストとして指定するスレッドID
+        self.blacklisted_thread_ids = [
+                    1047822747398578207, 1168424579081961504, 1243545403371028480,
+                    1149004841499234404, 1053007770103853199, 1033414785913589772,
+                    1033359573039452300, 1029382666149187624, 1174711755834933368,
+                    1306102576143532132, 1229489564679274607
+                ]
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if user.bot:
+            return
+        
+        # ブラックリストに含まれるスレッドIDなら無視する
+        if isinstance(reaction.message.channel, discord.Thread) and reaction.message.channel.id in self.blacklisted_thread_ids:
+            print(f"スレッド {reaction.message.channel.name} はブラックリストに含まれているため、処理をスキップします。")
             return
 
         # カスタム絵文字の場合、IDが一致するかチェック
@@ -85,6 +98,11 @@ class Kaibunsyo(commands.Cog):
 
             if isinstance(forum_channel, discord.ForumChannel):
                 for thread in forum_channel.threads:
+                    # ブラックリストに含まれるスレッドはスキップ
+                    if thread.id in self.blacklisted_thread_ids:
+                        print(f"スレッド {thread.name} はブラックリストに含まれているため、処理をスキップします。")
+                        continue
+
                     count += await self.check_reactions_in_channel(thread)
             else:
                 print(f"ID {forum_id} はフォーラムチャンネルではありません。")
