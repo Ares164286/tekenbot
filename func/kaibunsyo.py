@@ -94,7 +94,7 @@ class Kaibunsyo(commands.Cog):
     async def check_reactions_in_channel(self, channel):
         """指定されたチャンネル内のリアクションをチェックして、指定の絵文字がついたメッセージを保存"""
         count = 0
-        async for message in channel.history(limit=100):  # チェックするメッセージ数を調整可能
+        async for message in channel.history(limit=100000):  # チェックするメッセージ数を調整可能
             for reaction in message.reactions:
                 # カスタム絵文字の場合
                 if isinstance(reaction.emoji, discord.Emoji) and reaction.emoji.id in self.target_custom_emoji_ids:
