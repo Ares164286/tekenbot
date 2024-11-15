@@ -166,3 +166,5 @@ class Kaibunsyo(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Kaibunsyo(bot))
+    bot.tree.copy_global_to(guild=None)  # 全サーバーにスラッシュコマンドを適用
+    await bot.tree.sync()  # サーバーにコマンドを同期
