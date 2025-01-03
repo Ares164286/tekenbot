@@ -20,10 +20,10 @@ class HitAndBlowGame:
 
 games = {}
 
-TARGET_CHANNEL_ID = 1247535324440170546  # 指定したチャンネルIDに置き換えてください
+TARGET_CHANNEL_IDS = [1247535324440170546, 1324602681637077042]  # 指定したチャンネルIDに置き換えてください
 
 async def start_game(ctx, *args):
-    if ctx.channel.id != TARGET_CHANNEL_ID:
+    if ctx.channel.id not in TARGET_CHANNEL_IDS:
         await ctx.send("このコマンドは指定されたチャンネルでのみ使用できます。")
         return
 
