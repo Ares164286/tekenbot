@@ -4,7 +4,8 @@ from .zenkaku_hankaku import zenkaku_to_hankaku
 async def roll_calc(command):
     try:
         # 全角文字を半角文字に変換
-        command = command.translate(zenkaku_to_hankaku()).strip()
+        if isinstance(command, str):
+            command = command.translate(zenkaku_to_hankaku()).strip()
 
         # 正規表現で命令部分を抽出
         match = re.match(r"^\s*[Cc]\(([\d+\-*/().\s]+)\)\s*(.*)?$", command)
